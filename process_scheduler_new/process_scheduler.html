@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Algorithm Theory - Scheduling Algorithms</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --bg: #060608;
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface2: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.14);
+      --indigo: #6366f1;
+      --indigo-g: rgba(99, 102, 241, 0.18);
+      --violet: #8b5cf6;
+      --cyan: #06b6d4;
+      --text: #ededf0;
+      --muted: rgba(237, 237, 240, 0.48);
+      --subtle: rgba(237, 237, 240, 0.24);
+      --ease: cubic-bezier(.4, 0, .2, 1);
+      --r: 14px;
+      --r-lg: 20px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit
+    }
+
+    p {
+      color: var(--muted)
+    }
+
+    #vortex-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none
+    }
+
+    /* ── floating nav ── */
+    .ps-header {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      translate: -50% 0;
+      z-index: 900;
+      width: max-content
+    }
+
+    .ps-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(6, 6, 8, 0.75);
+      border: 1px solid var(--border2);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      padding: 7px 10px 7px 20px;
+      border-radius: 999px;
+      transition: background .3s var(--ease), box-shadow .3s var(--ease)
+    }
+
+    .ps-header.scrolled .ps-nav {
+      background: rgba(6, 6, 8, 0.93);
+      box-shadow: 0 8px 40px rgba(0, 0, 0, .6), 0 0 0 1px rgba(99, 102, 241, .15)
+    }
+
+    .ps-logo {
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -.02em;
+      color: var(--text);
+      margin-right: 16px;
+      white-space: nowrap;
+      text-decoration: none
+    }
+
+    .ps-logo span {
+      color: var(--indigo)
+    }
+
+    .ps-nav-links {
+      list-style: none;
+      display: flex;
+      gap: 2px
+    }
+
+    .ps-nav-links a {
+      font-size: .8rem;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 999px;
+      transition: color .2s, background .2s;
+      display: block;
+      white-space: nowrap
+    }
+
+    .ps-nav-links a:hover {
+      color: var(--text);
+      background: var(--surface2)
+    }
+
+    .ps-nav-cta {
+      background: var(--indigo) !important;
+      color: #fff !important;
+      box-shadow: 0 0 20px rgba(99, 102, 241, .35);
+      font-weight: 600 !important
+    }
+
+    .ps-nav-cta:hover {
+      box-shadow: 0 0 36px rgba(99, 102, 241, .5) !important;
+      translate: 0 -1px
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 2
+    }
+
+    /* ── layout ── */
+    .theory-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ── tabs ── */
+    .tabs {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1.5rem;
+      border-radius: var(--r);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      backdrop-filter: blur(12px)
+    }
+
+    .tab {
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      text-align: left;
+      font-weight: 600;
+      font-size: .85rem;
+      color: var(--muted);
+      transition: all .3s var(--ease);
+      border-left: 3px solid transparent;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab:last-child {
+      border-bottom: none;
+    }
+
+    .tab:hover {
+      background: var(--surface2);
+      color: var(--text)
+    }
+
+    .tab.active {
+      background: var(--indigo-g);
+      border-left-color: var(--indigo);
+      color: #a5b4fc
+    }
+
+    .tab.active:hover {
+      background: var(--indigo-g)
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--indigo);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: .82rem;
+      box-shadow: 0 0 20px rgba(99, 102, 241, .35);
+      transition: box-shadow .25s, translate .25s
+    }
+
+    .back-button:hover {
+      translate: 0 -1px;
+      box-shadow: 0 0 36px rgba(99, 102, 241, .5)
+    }
+
+    .back-button1 {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--indigo);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: .82rem;
+      box-shadow: 0 0 20px rgba(99, 102, 241, .35);
+      transition: box-shadow .25s, translate .25s
+    }
+
+    .back-button1:hover {
+      translate: 0 -1px;
+      box-shadow: 0 0 36px rgba(99, 102, 241, .5)
+    }
+
+    /* ── content cards ── */
+    .algo-content {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      backdrop-filter: blur(12px);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem
+    }
+
+    .algo-content.active {
+      display: block;
+      animation: fadeIn .5s
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .algo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .algo-title {
+      display: flex;
+      align-items: center
+    }
+
+    .algo-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--indigo);
+      color: #fff;
+      border-radius: 50%;
+      margin-right: 1rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      box-shadow: 0 0 14px rgba(99, 102, 241, .35)
+    }
+
+    h2 {
+      color: var(--text);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      letter-spacing: -.02em
+    }
+
+    h3 {
+      color: #a5b4fc;
+      font-size: 1.15rem;
+      margin: 1.5rem 0 .75rem 0;
+      font-weight: 700
+    }
+
+    h4 {
+      color: var(--text);
+      font-size: 1rem
+    }
+
+    .theory-section {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      border-radius: var(--r);
+      margin-bottom: 1.5rem
+    }
+
+    .example-section {
+      margin-bottom: 1.5rem
+    }
+
+    .process-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0
+    }
+
+    .process-table th,
+    .process-table td {
+      border: 1px solid var(--border);
+      padding: .75rem;
+      text-align: center;
+      font-size: .85rem
+    }
+
+    .process-table th {
+      background: var(--indigo-g);
+      font-weight: 600;
+      color: #a5b4fc;
+      text-transform: uppercase;
+      font-size: .75rem;
+      letter-spacing: .06em
+    }
+
+    .process-table td {
+      color: var(--muted)
+    }
+
+    .process-table tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02)
+    }
+
+    .gantt-chart {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 1rem 1rem 2.5rem 1rem;
+      margin: 1rem 0;
+      overflow-x: auto
+    }
+
+    .gantt-container {
+      display: flex;
+      min-height: 80px;
+      position: relative
+    }
+
+    .gantt-block {
+      padding: .5rem;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      position: relative;
+      min-width: 60px;
+      border-radius: 4px
+    }
+
+    .gantt-time {
+      position: absolute;
+      bottom: -25px;
+      font-size: .78rem;
+      color: var(--subtle)
+    }
+
+    .advantages-disadvantages {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1.5rem
+    }
+
+    .advantages,
+    .disadvantages {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      border-radius: var(--r)
+    }
+
+    .advantages h4,
+    .disadvantages h4 {
+      display: flex;
+      align-items: center;
+      margin-bottom: .75rem;
+      font-size: 1rem
+    }
+
+    .advantages h4::before {
+      display: inline-block;
+      color: #34d399;
+      margin-right: .5rem;
+      font-weight: bold
+    }
+
+    .disadvantages h4::before {
+      display: inline-block;
+      color: #f87171;
+      margin-right: .5rem;
+      font-weight: bold
+    }
+
+    ul {
+      padding-left: 1.5rem
+    }
+
+    li {
+      margin-bottom: .5rem;
+      color: var(--muted);
+      font-size: .9rem
+    }
+
+    strong {
+      color: var(--text)
+    }
+
+    code {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      padding: .25rem .5rem;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: .85rem
+    }
+
+    .footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--subtle);
+      font-size: .8rem;
+      margin-top: 2rem;
+      border-top: 1px solid var(--border);
+      position: relative;
+      z-index: 2
+    }
+
+    .p1 {
+      background-color: #3498db
+    }
+
+    .p2 {
+      background-color: #2ecc71
+    }
+
+    .p3 {
+      background-color: #e74c3c
+    }
+
+    .p4 {
+      background-color: #9b59b6
+    }
+
+    .p5 {
+      background-color: #f39c12
+    }
+
+    @media(max-width:768px) {
+      .theory-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .tab {
+        flex-basis: 50%
+      }
+
+      .advantages-disadvantages {
+        flex-direction: column
+      }
+
+      .ps-nav-links {
+        display: none
+      }
+
+      .ps-nav {
+        padding: 8px 14px
+      }
+    }
+
+    @media(max-width:480px) {
+      .tab {
+        flex-basis: 100%
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="vortex-canvas"></canvas>
+
+  <header class="ps-header">
+    <nav class="ps-nav">
+      <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+      <ul class="ps-nav-links">
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="process.html">Visualizer</a></li>
+        <li><a href="process.html" class="ps-nav-cta">Try It Live</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div style="height:80px"></div>
+
+  <div class="container">
+    <div class="theory-layout">
+      <div class="sidebar">
+        <div class="tabs">
+          <div class="tab active" onclick="showAlgo('fcfs')">First Come First Serve (FCFS)</div>
+          <div class="tab" onclick="showAlgo('sjf')">Shortest Job First (SJF)</div>
+          <div class="tab" onclick="showAlgo('priority')">Priority Scheduling</div>
+          <div class="tab" onclick="showAlgo('rr')">Round Robin</div>
+          <a href="process.html" class="back-button"
+            style="margin: 1rem; text-align: center; justify-content: center;">Visualize Algorithms</a>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div id="fcfs" class="algo-content active">
+          <div class="algo-header">
+            <div class="algo-title">
+              <div class="algo-icon">1</div>
+              <h2>First Come First Serve (FCFS)</h2>
+            </div>
+          </div>
+
+          <div class="theory-section">
+            <h3>Theory</h3>
+            <p>First Come First Serve (FCFS) is the simplest CPU scheduling algorithm. In this scheme:</p>
+            <ul>
+              <li>Processes are executed strictly in the order they arrive in the ready queue</li>
+              <li>It is <strong>non-preemptive</strong> - once a process starts executing, it continues until it
+                completes
+                or blocks</li>
+              <li>Implementation uses a FIFO (First In, First Out) queue</li>
+              <li>Simple to understand and implement but not optimal for performance</li>
+            </ul>
+          </div>
+
+          <div class="example-section">
+            <h3>Example</h3>
+
+            <table class="process-table">
+              <thead>
+                <tr>
+                  <th>Process</th>
+                  <th>Arrival Time</th>
+                  <th>Burst Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>P1</td>
+                  <td>0</td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td>P2</td>
+                  <td>1</td>
+                  <td>3</td>
+                </tr>
+                <tr>
+                  <td>P3</td>
+                  <td>2</td>
+                  <td>1</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="gantt-chart">
+              <h4>Gantt Chart</h4>
+              <div class="gantt-container">
+                <div class="gantt-block p1" style="flex: 4;">
+                  P1
+                  <span class="gantt-time" style="left: 0;">0</span>
+                  <span class="gantt-time" style="right: 0;">4</span>
+                </div>
+                <div class="gantt-block p2" style="flex: 3;">
+                  P2
+                  <span class="gantt-time" style="right: 0;">7</span>
+                </div>
+                <div class="gantt-block p3" style="flex: 1;">
+                  P3
+                  <span class="gantt-time" style="right: 0;">8</span>
+                </div>
+              </div>
+            </div>
+
+            <p>Results:</p>
+            <ul>
+              <li><strong>Waiting Time:</strong> P1 = 0, P2 = 3, P3 = 5</li>
+              <li><strong>Average Waiting Time:</strong> (0 + 3 + 5) / 3 = 2.67 time units</li>
+              <li><strong>Turnaround Time:</strong> P1 = 4, P2 = 6, P3 = 6</li>
+              <li><strong>Average Turnaround Time:</strong> (4 + 6 + 6) / 3 = 5.33 time units</li>
+            </ul>
+          </div>
+
+          <div class="advantages-disadvantages">
+            <div class="advantages">
+              <h4>Advantages</h4>
+              <ul>
+                <li>Simple to understand and implement</li>
+                <li>No starvation - every process gets CPU time</li>
+                <li>Fair for FIFO environment</li>
+                <li>Good for batch systems where run time is important</li>
+              </ul>
+            </div>
+            <div class="disadvantages">
+              <h4>Disadvantages</h4>
+              <ul>
+                <li>Poor average waiting time</li>
+                <li>Not suitable for interactive systems</li>
+                <li>Suffers from "convoy effect" - short processes wait for long ones</li>
+                <li>No priority consideration</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- SJF -->
+        <div id="sjf" class="algo-content">
+          <div class="algo-header">
+            <div class="algo-title">
+              <div class="algo-icon">2</div>
+              <h2>Shortest Job First (SJF)</h2>
+            </div>
+          </div>
+
+          <div class="theory-section">
+            <h3>Theory</h3>
+            <p>Shortest Job First (SJF) selects the process with the smallest CPU burst time. It comes in two variants:
+            </p>
+            <ul>
+              <li><strong>Non-preemptive:</strong> Once a process begins execution, it runs until completion</li>
+              <li><strong>Preemptive (SRTF):</strong> If a new process arrives with a shorter burst time, the current
+                process is preempted</li>
+              <li>Provably optimal for minimizing average waiting time</li>
+              <li>Main challenge: predicting the burst time of processes</li>
+            </ul>
+          </div>
+
+          <div class="example-section">
+            <h3>Example (Non-preemptive SJF)</h3>
+
+            <table class="process-table">
+              <thead>
+                <tr>
+                  <th>Process</th>
+                  <th>Arrival Time</th>
+                  <th>Burst Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>P1</td>
+                  <td>0</td>
+                  <td>6</td>
+                </tr>
+                <tr>
+                  <td>P2</td>
+                  <td>1</td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <td>P3</td>
+                  <td>2</td>
+                  <td>8</td>
+                </tr>
+                <tr>
+                  <td>P4</td>
+                  <td>3</td>
+                  <td>3</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="gantt-chart">
+              <h4>Gantt Chart</h4>
+              <div class="gantt-container">
+                <div class="gantt-block p1" style="flex: 6;">
+                  P1
+                  <span class="gantt-time" style="left: 0;">0</span>
+                  <span class="gantt-time" style="right: 0;">6</span>
+                </div>
+                <div class="gantt-block p2" style="flex: 2;">
+                  P2
+                  <span class="gantt-time" style="right: 0;">8</span>
+                </div>
+                <div class="gantt-block p4" style="flex: 3;">
+                  P4
+                  <span class="gantt-time" style="right: 0;">11</span>
+                </div>
+                <div class="gantt-block p3" style="flex: 8;">
+                  P3
+                  <span class="gantt-time" style="right: 0;">19</span>
+                </div>
+              </div>
+            </div>
+
+            <p>Results:</p>
+            <ul>
+              <li><strong>Waiting Time:</strong> P1 = 0, P2 = 5, P3 = 11, P4 = 5</li>
+              <li><strong>Average Waiting Time:</strong> (0 + 5 + 11 + 5) / 4 = 5.25 time units</li>
+            </ul>
+          </div>
+
+          <div class="advantages-disadvantages">
+            <div class="advantages">
+              <h4>Advantages</h4>
+              <ul>
+                <li>Optimal average waiting time</li>
+                <li>Good for systems with known job lengths</li>
+                <li>Reduces average response time</li>
+                <li>Better performance than FCFS</li>
+              </ul>
+            </div>
+            <div class="disadvantages">
+              <h4>Disadvantages</h4>
+              <ul>
+                <li>Difficult to predict burst times accurately</li>
+                <li>May cause starvation for longer processes</li>
+                <li>Not implementable in interactive systems easily</li>
+                <li>Overhead in calculating remaining time in preemptive version</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Priority -->
+        <div id="priority" class="algo-content">
+          <div class="algo-header">
+            <div class="algo-title">
+              <div class="algo-icon">3</div>
+              <h2>Priority Scheduling</h2>
+            </div>
+          </div>
+
+          <div class="theory-section">
+            <h3>Theory</h3>
+            <p>Priority Scheduling assigns a priority value to each process and the CPU is allocated based on priority:
+            </p>
+            <ul>
+              <li>Lower priority number typically indicates higher priority</li>
+              <li>Can be either <strong>preemptive</strong> or <strong>non-preemptive</strong></li>
+              <li>Priority can be determined based on memory requirements, time constraints, or other factors</li>
+              <li>Often uses a priority queue data structure for implementation</li>
+            </ul>
+          </div>
+
+          <div class="example-section">
+            <h3>Example (Non-preemptive Priority)</h3>
+
+            <table class="process-table">
+              <thead>
+                <tr>
+                  <th>Process</th>
+                  <th>Arrival Time</th>
+                  <th>Burst Time</th>
+                  <th>Priority (lower = higher)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>P1</td>
+                  <td>0</td>
+                  <td>5</td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <td>P2</td>
+                  <td>1</td>
+                  <td>3</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td>P3</td>
+                  <td>2</td>
+                  <td>8</td>
+                  <td>3</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="gantt-chart">
+              <h4>Gantt Chart</h4>
+              <div class="gantt-container">
+                <div class="gantt-block p1" style="flex: 5;">
+                  P1
+                  <span class="gantt-time" style="left: 0;">0</span>
+                  <span class="gantt-time" style="right: 0;">5</span>
+                </div>
+                <div class="gantt-block p2" style="flex: 3;">
+                  P2
+                  <span class="gantt-time" style="right: 0;">8</span>
+                </div>
+                <div class="gantt-block p3" style="flex: 8;">
+                  P3
+                  <span class="gantt-time" style="right: 0;">16</span>
+                </div>
+              </div>
+            </div>
+
+            <p>Results:</p>
+            <ul>
+              <li><strong>Waiting Time:</strong> P1 = 0, P2 = 4, P3 = 8</li>
+              <li><strong>Average Waiting Time:</strong> (0 + 4 + 8) / 3 = 4 time units</li>
+            </ul>
+          </div>
+
+          <div class="advantages-disadvantages">
+            <div class="advantages">
+              <h4>Advantages</h4>
+              <ul>
+                <li>Flexible - priority can reflect business or system requirements</li>
+                <li>Allows important processes to run first</li>
+                <li>Good for real-time systems with deadline requirements</li>
+                <li>Can be combined with other algorithms for better performance</li>
+              </ul>
+            </div>
+            <div class="disadvantages">
+              <h4>Disadvantages</h4>
+              <ul>
+                <li>Prone to starvation for low-priority processes</li>
+                <li>Possibility of priority inversion problem</li>
+                <li>May need aging mechanism to prevent starvation</li>
+                <li>Overhead in maintaining priority information</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Round Robin -->
+        <div id="rr" class="algo-content">
+          <div class="algo-header">
+            <div class="algo-title">
+              <div class="algo-icon">4</div>
+              <h2>Round Robin (RR)</h2>
+            </div>
+          </div>
+
+          <div class="theory-section">
+            <h3>Theory</h3>
+            <p>Round Robin is designed specifically for time-sharing systems. The key characteristics include:</p>
+            <ul>
+              <li>Each process gets CPU time in <strong>fixed time slices</strong> called time quantum (q)</li>
+              <li>Always <strong>preemptive</strong> - process is preempted if it exceeds the time quantum</li>
+              <li>Ready queue is treated as a circular queue</li>
+              <li>Processes that don't complete within the time quantum are placed at the end of the queue</li>
+              <li>Time quantum selection is critical - too small causes excessive context switching, too large
+                approaches
+                FCFS</li>
+            </ul>
+          </div>
+
+          <div class="example-section">
+            <h3>Example (Time Quantum = 2)</h3>
+
+            <table class="process-table">
+              <thead>
+                <tr>
+                  <th>Process</th>
+                  <th>Arrival Time</th>
+                  <th>Burst Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>P1</td>
+                  <td>0</td>
+                  <td>5</td>
+                </tr>
+                <tr>
+                  <td>P2</td>
+                  <td>1</td>
+                  <td>3</td>
+                </tr>
+                <tr>
+                  <td>P3</td>
+                  <td>2</td>
+                  <td>1</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="gantt-chart">
+              <h4>Gantt Chart</h4>
+              <div class="gantt-container">
+                <div class="gantt-block p1" style="flex: 2;">
+                  P1
+                  <span class="gantt-time" style="left: 0;">0</span>
+                  <span class="gantt-time" style="right: 0;">2</span>
+                </div>
+                <div class="gantt-block p2" style="flex: 2;">
+                  P2
+                  <span class="gantt-time" style="right: 0;">4</span>
+                </div>
+                <div class="gantt-block p3" style="flex: 1;">
+                  P3
+                  <span class="gantt-time" style="right: 0;">5</span>
+                </div>
+                <div class="gantt-block p1" style="flex: 2;">
+                  P1
+                  <span class="gantt-time" style="right: 0;">7</span>
+                </div>
+                <div class="gantt-block p2" style="flex: 1;">
+                  P2
+                  <span class="gantt-time" style="right: 0;">8</span>
+                </div>
+                <div class="gantt-block p1" style="flex: 1;">
+                  P1
+                  <span class="gantt-time" style="right: 0;">9</span>
+                </div>
+              </div>
+            </div>
+
+            <p>Results:</p>
+            <ul>
+              <li><strong>Waiting Time:</strong> P1 = 4, P2 = 4, P3 = 2</li>
+              <li><strong>Average Waiting Time:</strong> (4 + 4 + 2) / 3 = 3.33 time units</li>
+              <li><strong>Turnaround Time:</strong> P1 = 9, P2 = 7, P3 = 3</li>
+              <li><strong>Average Turnaround Time:</strong> (9 + 7 + 3) / 3 = 6.33 time units</li>
+            </ul>
+          </div>
+
+          <div class="advantages-disadvantages">
+            <div class="advantages">
+              <h4>Advantages</h4>
+              <ul>
+                <li>Fair allocation of CPU time</li>
+                <li>No starvation - every process gets a chance</li>
+                <li>Good response time for short processes</li>
+                <li>Ideal for time-sharing environments</li>
+                <li>Better for interactive systems than FCFS</li>
+              </ul>
+            </div>
+            <div class="disadvantages">
+              <h4>Disadvantages</h4>
+              <ul>
+                <li>Higher average waiting time than SJF</li>
+                <li>Performance heavily depends on time quantum selection</li>
+                <li>Context switching overhead if time quantum is too small</li>
+                <li>Treats all processes equally regardless of priority or importance</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="process.html" class="back-button1"> Visualize Algorithms</a>
+      <p style="margin-top:12px">&copy; 2025 OS Emulator Project. All rights reserved.</p>
+    </div>
+
+
+    <script>
+      function showAlgo(algoId) {
+        // Hide all content
+        const contents = document.querySelectorAll('.algo-content');
+        contents.forEach(content => {
+          content.classList.remove('active');
+        });
+
+        // Show selected content
+        document.getElementById(algoId).classList.add('active');
+
+        // Update tabs
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+          tab.classList.remove('active');
+        });
+
+        const clickedTab = Array.from(tabs).find(tab => {
+          return tab.textContent.toLowerCase().includes(algoId);
+        });
+
+        if (clickedTab) {
+          clickedTab.classList.add('active');
+        }
+      }
+    </script>
+
+    <script>
+      /* ── Vortex background (matching homepage) ── */
+      (function () {
+        const cvs = document.getElementById('vortex-canvas');
+        if (!cvs) return;
+        const ctx = cvs.getContext('2d');
+        let W = 0, H = 0, pts = [];
+        const HUES = [{ h: 240, spread: 25 }, { h: 262, spread: 22 }, { h: 192, spread: 18 }];
+        function minHalf() { return Math.min(W, H) * 0.5 }
+        class Particle {
+          constructor(boot) {
+            const hDef = HUES[Math.floor(Math.random() * HUES.length)];
+            this.hue = hDef.h + (Math.random() - 0.5) * hDef.spread;
+            this.sat = 70 + Math.random() * 20; this.lit = 55 + Math.random() * 25;
+            this.angle = Math.random() * Math.PI * 2;
+            this.r = boot ? Math.random() * minHalf() : 1;
+            this.va = 0.0018 + Math.random() * 0.004;
+            this.vr = (Math.random() > 0.5 ? 1 : -1) * (0.25 + Math.random() * 0.55);
+            this.size = 0.4 + Math.random() * 1.5; this.life = 0;
+            this.maxLife = 110 + Math.random() * 210;
+          }
+          step() { this.angle += this.va; this.r += this.vr * 0.38; this.life += 1; if (this.r < 1 || this.r > minHalf() || this.life > this.maxLife) Object.assign(this, new Particle(false)) }
+          paint() { const t = this.life / this.maxLife; const a = t < 0.12 ? t / 0.12 : t > 0.8 ? (1 - t) / 0.2 : 1; const x = W / 2 + Math.cos(this.angle) * this.r; const y = H / 2 + Math.sin(this.angle) * this.r; ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2); ctx.fillStyle = `hsla(${this.hue},${this.sat}%,${this.lit}%,${(a * 0.65).toFixed(2)})`; ctx.fill() }
+        }
+        function resize() { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight }
+        function init() { pts = Array.from({ length: 400 }, () => new Particle(true)) }
+        function draw() { ctx.fillStyle = 'rgba(6,6,8,0.17)'; ctx.fillRect(0, 0, W, H); const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, minHalf() * 0.55); g.addColorStop(0, 'rgba(99,102,241,0.05)'); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); pts.forEach(p => { p.step(); p.paint() }); requestAnimationFrame(draw) }
+        window.addEventListener('resize', () => { resize(); init() });
+        resize(); init(); draw();
+
+        /* nav scroll effect */
+        window.addEventListener('scroll', function () {
+          const hdr = document.querySelector('.ps-header');
+          if (hdr) hdr.classList.toggle('scrolled', window.scrollY > 60);
+        }, { passive: true });
+      }());
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="process_scheduler.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>Process Scheduling Visualizer</title>
+</head>
+
+<body>
+  <canvas id="vortex-canvas"></canvas>
+
+  <header class="ps-header">
+    <nav class="ps-nav">
+      <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+      <ul class="ps-nav-links">
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="process_scheduler.html">Theory</a></li>
+        <li><a href="process_scheduler.html" class="ps-nav-cta">Algorithm Theory</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div style="height:80px"></div>
+
+  <div class="container">
+    <div style="margin: 0 0 20px 0;">
+      <a href="process_scheduler.html" class="back-link">
+        <span style="font-size: 16px;">⬅</span>
+        <span>Algorithm Theory</span>
+      </a>
+    </div>
+    <h1><i class="fas fa-clock" style="margin-right:10px"></i> CPU Scheduling Visualizer</h1>
+
+    <div class="app-layout">
+      <div class="sidebar">
+        <div class="card">
+          <h2>Scheduling Settings</h2>
+          <div class="form-group">
+            <label for="algorithm">Algorithm</label>
+            <select id="algorithm">
+              <option value="sjf">Shortest Job First (SJF)</option>
+              <option value="fcfs">First Come First Served (FCFS)</option>
+              <option value="priority">Priority Scheduling</option>
+              <option value="rr">Round Robin</option>
+            </select>
+          </div>
+  
+          <div class="form-group" id="preemptive-container">
+            <label for="preemptive">Execution Mode</label>
+            <select id="preemptive">
+              <option value="false">Non-Preemptive</option>
+              <option value="true">Preemptive</option>
+            </select>
+          </div>
+  
+          <div class="form-group" id="time-quantum-container" style="display: none;">
+            <label for="time-quantum">Time Quantum</label>
+            <input type="number" id="time-quantum" min="1" value="2">
+          </div>
+  
+          <div class="form-group">
+            <label for="speed">Simulation Speed (ms)</label>
+            <input type="range" id="speed" min="100" max="2000" step="100" value="1000">
+            <div class="range-value" id="speed-value">1000ms</div>
+          </div>
+  
+          <div class="button-group">
+            <button id="start-btn" class="button-green">Start</button>
+            <button id="stop-btn" class="button-red" disabled>Stop</button>
+            <button id="reset-btn" class="button-gray">Reset</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Add Process</h2>
+          <div class="form-group">
+            <label for="process-name">Process Name</label>
+            <input type="text" id="process-name" placeholder="e.g., P5">
+          </div>
+          <div class="form-group">
+            <label for="arrival-time">Arrival Time</label>
+            <input type="number" id="arrival-time" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label for="burst-time">Burst Time</label>
+            <input type="number" id="burst-time" min="1" value="1">
+          </div>
+          <div class="form-group">
+            <label for="priority">Priority (lower value = higher priority)</label>
+            <input type="number" id="priority" min="1" value="1">
+          </div>
+          <button id="add-process-btn">Add Process</button>
+        </div>
+      </div>
+      
+      <div class="main-content">
+
+    <div class="card">
+      <h2>Processes</h2>
+      <div style="overflow-x: auto;">
+        <table id="processes-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Arrival Time</th>
+              <th>Burst Time</th>
+              <th>Priority</th>
+              <th>Remaining Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="processes-tbody">
+            <!-- Process rows will be added here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Gantt Chart</h2>
+      <div class="mb-2" style="font-size:.85rem;color:rgba(237,237,240,0.48);margin-bottom:10px">Current Time: <span
+          id="current-time" style="color:#a5b4fc;font-weight:700">0</span></div>
+
+      <div class="gantt-container">
+        <div id="gantt-chart" class="gantt-chart">
+          <!-- Gantt chart items will be added here -->
+        </div>
+
+        <div id="current-process-info"></div>
+        <div id="queue-display"></div>
+      </div>
+    </div>
+
+    <div class="card" id="output-card" style="display: none;">
+      <h2>Output</h2>
+      <div style="overflow-x: auto;">
+        <table id="output-table">
+          <thead>
+            <tr>
+              <th>Process</th>
+              <th>Completion Time</th>
+              <th>Turnaround Time</th>
+              <th>Waiting Time</th>
+            </tr>
+          </thead>
+          <tbody id="output-tbody">
+            <!-- Output rows will be added here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+      </div>
+  </div>
+
+  <footer class="ps-footer">
+    <div class="ps-foot-inner">
+      <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+      <p>&copy; 2025 OS Emulator Project. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="process_scheduler.js"></script>
+
+  <script>
+    /* ── Vortex background (matching homepage) ── */
+    (function () {
+      const cvs = document.getElementById('vortex-canvas');
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      let W = 0, H = 0, pts = [];
+      const HUES = [{ h: 240, spread: 25 }, { h: 262, spread: 22 }, { h: 192, spread: 18 }];
+      function minHalf() { return Math.min(W, H) * 0.5 }
+      class Particle {
+        constructor(boot) {
+          const hDef = HUES[Math.floor(Math.random() * HUES.length)];
+          this.hue = hDef.h + (Math.random() - 0.5) * hDef.spread;
+          this.sat = 70 + Math.random() * 20; this.lit = 55 + Math.random() * 25;
+          this.angle = Math.random() * Math.PI * 2;
+          this.r = boot ? Math.random() * minHalf() : 1;
+          this.va = 0.0018 + Math.random() * 0.004;
+          this.vr = (Math.random() > 0.5 ? 1 : -1) * (0.25 + Math.random() * 0.55);
+          this.size = 0.4 + Math.random() * 1.5; this.life = 0;
+          this.maxLife = 110 + Math.random() * 210;
+        }
+        step() { this.angle += this.va; this.r += this.vr * 0.38; this.life += 1; if (this.r < 1 || this.r > minHalf() || this.life > this.maxLife) Object.assign(this, new Particle(false)) }
+        paint() { const t = this.life / this.maxLife; const a = t < 0.12 ? t / 0.12 : t > 0.8 ? (1 - t) / 0.2 : 1; const x = W / 2 + Math.cos(this.angle) * this.r; const y = H / 2 + Math.sin(this.angle) * this.r; ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2); ctx.fillStyle = `hsla(${this.hue},${this.sat}%,${this.lit}%,${(a * 0.65).toFixed(2)})`; ctx.fill() }
+      }
+      function resize() { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight }
+      function init() { pts = Array.from({ length: 400 }, () => new Particle(true)) }
+      function draw() { ctx.fillStyle = 'rgba(6,6,8,0.17)'; ctx.fillRect(0, 0, W, H); const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, minHalf() * 0.55); g.addColorStop(0, 'rgba(99,102,241,0.05)'); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); pts.forEach(p => { p.step(); p.paint() }); requestAnimationFrame(draw) }
+      window.addEventListener('resize', () => { resize(); init() });
+      resize(); init(); draw();
+
+      /* nav scroll effect */
+      window.addEventListener('scroll', function () {
+        const hdr = document.querySelector('.ps-header');
+        if (hdr) hdr.classList.toggle('scrolled', window.scrollY > 60);
+      }, { passive: true });
+    }());
+  </script>
+
+</body>
+
+</html>
