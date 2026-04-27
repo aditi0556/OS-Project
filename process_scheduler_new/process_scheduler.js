@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const arrivalTimeInput = document.getElementById('arrival-time');
   const burstTimeInput = document.getElementById('burst-time');
   const priorityInput = document.getElementById('priority');
+  const priorityContainer = document.getElementById('priority-container');
   const addProcessBtn = document.getElementById('add-process-btn');
   const startBtn = document.getElementById('start-btn');
   const stopBtn = document.getElementById('stop-btn');
@@ -66,6 +67,12 @@ document.addEventListener('DOMContentLoaded', function () {
       timeQuantumContainer.style.display = 'block';
     } else {
       timeQuantumContainer.style.display = 'none';
+    }
+
+    if (algorithm === 'priority') {
+      priorityContainer.style.display = 'block';
+    } else {
+      priorityContainer.style.display = 'none';
     }
   });
 
@@ -694,4 +701,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Initialize the simulation
   updateProcessesTable();
   updateGanttChart();
+
+  // Trigger change event to set initial UI state based on select default
+  algorithmSelect.dispatchEvent(new Event('change'));
 });
