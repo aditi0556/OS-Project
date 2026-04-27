@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', function () {
   // Initial state
   let processes = [
-    { id: 1, name: "P1", arrivalTime: 0, burstTime: 10, priority: 2, color: "#FF5733", remainingTime: 10 },
-    { id: 2, name: "P2", arrivalTime: 1, burstTime: 4, priority: 1, color: "#33FF57", remainingTime: 4 },
-    { id: 3, name: "P3", arrivalTime: 2, burstTime: 2, priority: 3, color: "#3357FF", remainingTime: 2 },
-    { id: 4, name: "P4", arrivalTime: 3, burstTime: 6, priority: 4, color: "#F3FF33", remainingTime: 6 },
+    { id: 1, name: "P1", arrivalTime: 0, burstTime: 10, priority: 2, color: "#6366f1", remainingTime: 10 },
+    { id: 2, name: "P2", arrivalTime: 1, burstTime: 4, priority: 1, color: "#10b981", remainingTime: 4 },
+    { id: 3, name: "P3", arrivalTime: 2, burstTime: 2, priority: 3, color: "#f43f5e", remainingTime: 2 },
+    { id: 4, name: "P4", arrivalTime: 3, burstTime: 6, priority: 4, color: "#f97316", remainingTime: 6 },
   ];
 
   let algorithm = "fcfs";
@@ -23,9 +23,18 @@ document.addEventListener('DOMContentLoaded', function () {
   timeQuantum = timeQuantum - 1;
 
   const colors = [
-    "#FF5733", "#33FF57", "#3357FF", "#F3FF33",
-    "#FF33F3", "#33FFF3", "#F333FF", "#C70039",
-    "#900C3F", "#581845", "#FFC300", "#DAF7A6"
+    "#6366f1", // Indigo
+    "#10b981", // Emerald
+    "#f43f5e", // Rose
+    "#f97316", // Orange
+    "#06b6d4", // Cyan
+    "#8b5cf6", // Violet
+    "#ec4899", // Pink
+    "#14b8a6", // Teal
+    "#3b82f6", // Blue
+    "#eab308", // Yellow
+    "#d946ef", // Fuchsia
+    "#84cc16"  // Lime
   ];
 
   // DOM elements
