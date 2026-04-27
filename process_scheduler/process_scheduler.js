@@ -442,7 +442,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Average row
     const averages = calculateAverages();
     const avgRow = document.createElement('tr');
-    avgRow.style.backgroundColor = '#f3f4f6';
+    avgRow.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
     avgRow.style.fontWeight = '500';
 
     const avgLabelCell = document.createElement('td');
