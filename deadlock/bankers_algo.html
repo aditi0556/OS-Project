@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banker's Algorithm</title>
+  <link rel="stylesheet" href="deadlock.css">
+</head>
+
+<body>
+  <canvas id="vortex-canvas"></canvas>
+
+  <header class="ps-header">
+    <nav class="ps-nav">
+      <a href="deadlock.html" class="ps-logo">Deadlock<span>Simulator</span></a>
+      <ul class="ps-nav-links">
+        <li><a href="deadlock.html">Home</a></li>
+        <li><a href="deadlock_detection.html">Detection</a></li>
+        <li><a href="bankers_algo.html" class="ps-nav-cta">Banker's Algorithm</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="page-spacer"></div>
+
+  <main class="container">
+    <div class="page-top-link">
+      <a href="deadlock.html" class="back-link">Back to Home</a>
+    </div>
+
+    <h1>Banker's Algorithm</h1>
+    <p class="hero-copy text-center">Banker's Algorithm is a deadlock avoidance method that checks whether granting a resource request will leave the system in a safe state.</p>
+
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="card">
+          <h2>Banker's Algorithm Input</h2>
+          <div class="inline-grid">
+            <div class="form-group">
+              <label for="banker-process-count">Number of Processes</label>
+              <input type="number" id="banker-process-count" min="1" max="8" value="3">
+            </div>
+            <div class="form-group">
+              <label for="banker-resource-count">Number of Resources</label>
+              <input type="number" id="banker-resource-count" min="1" max="6" value="3">
+            </div>
+          </div>
+          <div class="stack-actions">
+            <button type="button" id="generate-banker-inputs">Generate Inputs</button>
+            <button type="button" class="button-gray" id="fill-banker-sample">Fill Sample Data</button>
+            <button type="button" id="check-safe-state">Check Safe State</button>
+            <button type="button" class="button-gray" id="reset-banker-inputs">Reset</button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="main-content">
+        <div class="card">
+          <h2>Max Matrix</h2>
+          <div class="table-wrap" id="max-matrix"></div>
+        </div>
+
+        <div class="card">
+          <h2>Allocation Matrix</h2>
+          <div class="table-wrap" id="avoidance-allocation-matrix"></div>
+        </div>
+
+        <div class="card">
+          <h2>Available Resources</h2>
+          <div id="available-resources" class="inline-grid"></div>
+        </div>
+
+        <div class="card">
+          <h2>Banker's Algorithm Output</h2>
+          <div id="result-section">
+            <div id="safe-state-result" class="status-banner status-neutral">
+              <div class="status-title">Ready to evaluate</div>
+              <p>Provide the allocation matrix, max matrix, and available resources, then run Banker's Algorithm to verify whether a safe sequence exists.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Need Matrix Output</h2>
+          <div id="need-matrix-result" class="table-wrap">
+            <p class="section-copy">The need matrix is calculated as Need = Max - Allocation and appears here after running Banker's Algorithm.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="ps-footer">
+    <div class="ps-foot-inner">
+      <a href="deadlock.html" class="ps-logo">Deadlock<span>Simulator</span></a>
+      <p>&copy; 2026 Deadlock Simulator. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="deadlock.js"></script>
+  <script>
+    const bankerState = {
+      processCount: 3,
+      resourceCount: 3,
+      sampleMax: [
+        [7, 5, 3],
+        [3, 2, 2],
+        [9, 0, 2]
+      ],
+      sampleAllocation: [
+        [0, 1, 0],
+        [2, 0, 0],
+        [3, 0, 2]
+      ],
+      sampleAvailable: [3, 3, 2]
+    };
+
+    function createBankerTable(containerId, rows, columns, prefix, values) {
+      const container = document.getElementById(containerId);
+      const table = document.createElement('table');
+      const head = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      headRow.innerHTML = `<th>Process</th>${Array.from({ length: columns }, (_, resourcedeadlock) => `<th>R${resourcedeadlock + 1}</th>`).join('')}`;
+      head.appendChild(headRow);
+      table.appendChild(head);
+
+      const body = document.createElement('tbody');
+
+      for (let rowdeadlock = 0; rowdeadlock < rows; rowdeadlock += 1) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>P${rowdeadlock + 1}</td>`;
+
+        for (let columndeadlock = 0; columndeadlock < columns; columndeadlock += 1) {
+          const cell = document.createElement('td');
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.min = '0';
+          input.value = values?.[rowdeadlock]?.[columndeadlock] ?? 0;
+          input.id = `${prefix}-${rowdeadlock}-${columndeadlock}`;
+          cell.appendChild(input);
+          row.appendChild(cell);
+        }
+
+        body.appendChild(row);
+      }
+
+      table.appendChild(body);
+      container.innerHTML = '';
+      container.appendChild(table);
+    }
+
+    function createAvailableInputs(values) {
+      const container = document.getElementById('available-resources');
+      container.innerHTML = '';
+
+      for (let resourcedeadlock = 0; resourcedeadlock < bankerState.resourceCount; resourcedeadlock += 1) {
+        const group = document.createElement('div');
+        group.className = 'form-group';
+        group.innerHTML = `
+          <label for="available-${resourcedeadlock}">R${resourcedeadlock + 1}</label>
+          <input type="number" id="available-${resourcedeadlock}" min="0" value="${values?.[resourcedeadlock] ?? 0}">
+        `;
+        container.appendChild(group);
+      }
+    }
+
+    function renderBankerInputs() {
+      bankerState.processCount = Number(document.getElementById('banker-process-count').value) || 1;
+      bankerState.resourceCount = Number(document.getElementById('banker-resource-count').value) || 1;
+      createBankerTable('max-matrix', bankerState.processCount, bankerState.resourceCount, 'max');
+      createBankerTable('avoidance-allocation-matrix', bankerState.processCount, bankerState.resourceCount, 'allocation');
+      createAvailableInputs();
+    }
+
+    function loadBankerSample() {
+      bankerState.processCount = bankerState.sampleMax.length;
+      bankerState.resourceCount = bankerState.sampleMax[0].length;
+      document.getElementById('banker-process-count').value = bankerState.processCount;
+      document.getElementById('banker-resource-count').value = bankerState.resourceCount;
+
+      createBankerTable('max-matrix', bankerState.processCount, bankerState.resourceCount, 'max', bankerState.sampleMax);
+      createBankerTable('avoidance-allocation-matrix', bankerState.processCount, bankerState.resourceCount, 'allocation', bankerState.sampleAllocation);
+      createAvailableInputs(bankerState.sampleAvailable);
+    }
+
+    function resetBankerInputs() {
+      createBankerTable('max-matrix', bankerState.processCount, bankerState.resourceCount, 'max');
+      createBankerTable('avoidance-allocation-matrix', bankerState.processCount, bankerState.resourceCount, 'allocation');
+      createAvailableInputs(new Array(bankerState.resourceCount).fill(0));
+      document.getElementById('safe-state-result').className = 'status-banner status-neutral';
+      document.getElementById('safe-state-result').innerHTML = `
+        <div class="status-title">Ready to evaluate</div>
+        <p>Provide the allocation matrix, max matrix, and available resources, then run Banker's Algorithm to verify whether a safe sequence exists.</p>
+      `;
+      document.getElementById('need-matrix-result').innerHTML = '<p class="section-copy">The need matrix is calculated as Need = Max - Allocation and appears here after running Banker&#39;s Algorithm.</p>';
+    }
+
+    function readBankerMatrix(prefix, rows, columns) {
+      return Array.from({ length: rows }, (_, rowdeadlock) => (
+        Array.from({ length: columns }, (_, columndeadlock) => {
+          const value = Number(document.getElementById(`${prefix}-${rowdeadlock}-${columndeadlock}`).value);
+          return Number.isFinite(value) && value >= 0 ? value : 0;
+        })
+      ));
+    }
+
+    function readAvailableResources() {
+      return Array.from({ length: bankerState.resourceCount }, (_, resourcedeadlock) => {
+        const value = Number(document.getElementById(`available-${resourcedeadlock}`).value);
+        return Number.isFinite(value) && value >= 0 ? value : 0;
+      });
+    }
+
+    function runBankersAlgorithm(maxMatrix, allocationMatrix, available) {
+      const needMatrix = maxMatrix.map((row, processdeadlock) => (
+        row.map((value, resourcedeadlock) => Math.max(value - allocationMatrix[processdeadlock][resourcedeadlock], 0))
+      ));
+      const work = [...available];
+      const finish = new Array(bankerState.processCount).fill(false);
+      const safeSequence = [];
+
+      let progress = true;
+      while (progress) {
+        progress = false;
+
+        for (let processdeadlock = 0; processdeadlock < bankerState.processCount; processdeadlock += 1) {
+          const canFinish = !finish[processdeadlock] && needMatrix[processdeadlock].every((need, resourcedeadlock) => need <= work[resourcedeadlock]);
+
+          if (canFinish) {
+            finish[processdeadlock] = true;
+            safeSequence.push(`P${processdeadlock + 1}`);
+            for (let resourcedeadlock = 0; resourcedeadlock < bankerState.resourceCount; resourcedeadlock += 1) {
+              work[resourcedeadlock] += allocationMatrix[processdeadlock][resourcedeadlock];
+            }
+            progress = true;
+          }
+        }
+      }
+
+      return {
+        isSafe: finish.every(Boolean),
+        safeSequence,
+        needMatrix,
+        remainingWork: work,
+        unfinished: finish.map((done, deadlock) => (!done ? `P${deadlock + 1}` : null)).filter(Boolean)
+      };
+    }
+
+    function renderSafeStateResult(result) {
+      const panel = document.getElementById('safe-state-result');
+      panel.className = `status-banner ${result.isSafe ? 'status-safe' : 'status-unsafe'}`;
+      panel.innerHTML = `
+        <div class="status-title">${result.isSafe ? 'System is in SAFE state' : 'System is NOT in safe state'}</div>
+        <p>${result.isSafe
+          ? `Safe sequence: ${result.safeSequence.join(' -> ')}`
+          : `Deadlock possible. No complete safe sequence exists. Processes still waiting: ${result.unfinished.join(', ') || 'none'}.`}</p>
+        <p style="margin-top:10px;">Work / Available after simulation: [${result.remainingWork.join(', ')}]</p>
+      `;
+
+      const needMatrixResult = document.getElementById('need-matrix-result');
+      needMatrixResult.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Process</th>
+              ${Array.from({ length: bankerState.resourceCount }, (_, resourcedeadlock) => `<th>R${resourcedeadlock + 1}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${result.needMatrix.map((row, processdeadlock) => `
+              <tr>
+                <td>P${processdeadlock + 1}</td>
+                ${row.map((value) => `<td>${value}</td>`).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function checkSafeState() {
+      const maxMatrix = readBankerMatrix('max', bankerState.processCount, bankerState.resourceCount);
+      const allocationMatrix = readBankerMatrix('allocation', bankerState.processCount, bankerState.resourceCount);
+      const available = readAvailableResources();
+      const result = runBankersAlgorithm(maxMatrix, allocationMatrix, available);
+      renderSafeStateResult(result);
+      document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('generate-banker-inputs').addEventListener('click', renderBankerInputs);
+    document.getElementById('fill-banker-sample').addEventListener('click', loadBankerSample);
+    document.getElementById('check-safe-state').addEventListener('click', checkSafeState);
+    document.getElementById('reset-banker-inputs').addEventListener('click', resetBankerInputs);
+
+    renderBankerInputs();
+  </script>
+</body>
+
+</html>
