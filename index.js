@@ -97,7 +97,7 @@
       desc:  'Classical synchronisation problems solved step-by-step',
       by:    '',
       icon:  'fas fa-hdd',
-      href:  'process/process-syncronization.html',
+      href:  'process-synchronization/process-sync.html',
       bg:    'linear-gradient(155deg,#060024 0%,#1b0556 50%,#2d1b69 100%)'
     },
     {
