@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disk Scheduling Algorithms</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Disk Scheduling Algorithms</h1>
+            <p class="intro">
+                Disk Scheduling Algorithm is a crucial component of operating systems that manages and organizes input and output requests for disk access. 
+                It helps reduce disk arm movement, minimizes response time, and ensures efficient data access. 
+                Understanding these algorithms is essential as disk operations are among the slowest parts of computer systems.
+            </p>
+        </header>
+
+        <div class="key-terms">
+            <h2>Key Terms in Disk Scheduling</h2>
+            <ul>
+                <li><strong>Seek Time:</strong> Time taken by disk arm to locate the required block</li>
+                <li><strong>Rotational Latency:</strong> Time for data block to reach read/write head position</li>
+                <li><strong>Transfer Time:</strong> Time to fetch and provide data as output</li>
+                <li><strong>Disk Access Time:</strong> Total time (seek time + rotational latency + transfer time)</li>
+                <li><strong>Disk Response Time:</strong> Average waiting time for requests in queue</li>
+            </ul>
+        </div>
+
+        <div class="algorithms-grid">
+            <div class="algorithm-card">
+                <h2>FCFS (First Come First Serve)</h2>
+                <div class="card-content">
+                    <p>Processes requests in order of arrival, following a simple first-in-first-out (FIFO) approach. The disk head moves to fulfill requests in the exact sequence they were received.</p>
+                    <h3>Characteristics:</h3>
+                    <ul>
+                        <li>Simple implementation using a FIFO queue</li>
+                        <li>No starvation as every request is guaranteed to be served</li>
+                        <li>Higher seek times due to random head movements</li>
+                        <li>Fair but not efficient for high-load systems</li>
+                    </ul>
+                    <h3>Advantages:</h3>
+                    <ul>
+                        <li>Every request gets equal opportunity</li>
+                        <li>Perfect for low-load systems</li>
+                        <li>Minimal overhead in request processing</li>
+                    </ul>
+                    <h3>Disadvantages:</h3>
+                    <ul>
+                        <li>High average seek time and response time</li>
+                        <li>No optimization for head movement</li>
+                        <li>Poor performance with scattered requests</li>
+                    </ul>
+                    <div class="example">
+                        Example: For head at 50 and requests (82,170,43,140,24,16,190), total seek time = 642<br>
+                        Calculation: |50-82| + |82-170| + |170-43| + |43-140| + |140-24| + |24-16| + |16-190| = 642
+                    </div>
+                </div>
+            </div>
+
+            <div class="algorithm-card">
+                <h2>SSTF (Shortest Seek Time First)</h2>
+                <div class="card-content">
+                    <p>Selects request with minimum seek time from current head position, implementing a shortest-job-first approach for disk scheduling.</p>
+                    <h3>Characteristics:</h3>
+                    <ul>
+                        <li>Lower disk response time compared to FCFS</li>
+                        <li>More efficient head movement patterns</li>
+                        <li>Possible starvation of distant requests</li>
+                        <li>Requires continuous calculation of seek times</li>
+                    </ul>
+                    <h3>Advantages:</h3>
+                    <ul>
+                        <li>Significantly reduces average seek time</li>
+                        <li>Better throughput than FCFS</li>
+                        <li>Good for systems with varied request patterns</li>
+                    </ul>
+                    <h3>Disadvantages:</h3>
+                    <ul>
+                        <li>Complex implementation requiring seek time calculation</li>
+                        <li>Potential starvation of distant cylinders</li>
+                        <li>Overhead in finding shortest seek time</li>
+                    </ul>
+                    <div class="example">
+                        Example: For same sequence, total seek time = 208<br>
+                        Path: 50 → 43 → 24 → 16 → 82 → 140 → 170 → 190
+                    </div>
+                </div>
+            </div>
+
+            <div class="algorithm-card">
+                <h2>SCAN (Elevator)</h2>
+                <div class="card-content">
+                    <p>Head moves in one direction until end, then reverses, serving requests along the way. Similar to an elevator's movement pattern, hence the name.</p>
+                    <h3>Characteristics:</h3>
+                    <ul>
+                        <li>Easy implementation with directional scanning</li>
+                        <li>No request queue starvation</li>
+                        <li>Continuous movement to disk end</li>
+                        <li>Better performance than FCFS and SSTF</li>
+                    </ul>
+                    <h3>Advantages:</h3>
+                    <ul>
+                        <li>Uniform servicing of requests</li>
+                        <li>Good for heavy-load systems</li>
+                        <li>Prevents starvation effectively</li>
+                    </ul>
+                    <h3>Disadvantages:</h3>
+                    <ul>
+                        <li>Maximum waiting time for cylinders just visited</li>
+                        <li>Extra head movement to disk ends</li>
+                        <li>Not optimal for light loads</li>
+                    </ul>
+                    <div class="example">
+                        Example: For same sequence, total seek time = 332<br>
+                        Path: 50 → 43 → 24 → 16 → 0 → 82 → 140 → 170 → 190
+                    </div>
+                </div>
+            </div>
+
+            <div class="algorithm-card">
+                <h2>C-SCAN (Circular SCAN)</h2>
+                <div class="card-content">
+                    <p>Similar to SCAN but serves requests only in forward direction. After reaching the disk end, it quickly returns to the beginning (0) without serving any requests, and starts serving again from the beginning. This creates a circular movement pattern.</p>
+                    <h3>Working:</h3>
+                    <ul>
+                        <li>Head moves toward the end of disk (199) serving requests</li>
+                        <li>After reaching end, quickly returns to beginning (0)</li>
+                        <li>During return journey, no requests are served</li>
+                        <li>Starts serving again from beginning (0) onwards</li>
+                    </ul>
+                    <h3>Advantages:</h3>
+                    <ul>
+                        <li>Uniform waiting time distribution for all cylinders</li>
+                        <li>Better response time than SCAN</li>
+                        <li>Avoids starvation of requests</li>
+                    </ul>
+                    <h3>Disadvantages:</h3>
+                    <ul>
+                        <li>Higher seek time due to full disk traversal</li>
+                        <li>Head always moves to disk ends</li>
+                        <li>Unused return traversal increases total time</li>
+                    </ul>
+                    <div class="example">
+                        Example: For head at 50 and requests (82,170,43,140,24,16,190), total seek time = 391<br>
+                        Path: 50 → 82 → 140 → 170 → 190 → [199] → [0] → 16 → 24 → 43<br>
+                        Calculation: (199-50) + (199-0) + (43-0) = 149 + 199 + 43 = 391
+                    </div>
+                </div>
+            </div>
+
+            <div class="algorithm-card">
+                <h2>LOOK</h2>
+                <div class="card-content">
+                    <p>LOOK is an improved version of SCAN. The head starts from the first request in one direction and moves toward the opposite end, serving all requests in between. After reaching the last request in that direction, it reverses and returns toward the remaining requests. Unlike SCAN, it does not go all the way to the disk edge when there are no requests there.</p>
+                    <h3>Characteristics:</h3>
+                    <ul>
+                        <li>No starvation of requests</li>
+                        <li>Efficient time usage with limited movement</li>
+                        <li>Serves requests in both directions</li>
+                        <li>Better performance than SCAN</li>
+                    </ul>
+                    <h3>Advantages:</h3>
+                    <ul>
+                        <li>Reduced head movement compared to SCAN</li>
+                        <li>Better average response time</li>
+                        <li>More efficient for edge cylinders</li>
+                    </ul>
+                    <h3>Disadvantages:</h3>
+                    <ul>
+                        <li>More complex implementation than SCAN</li>
+                        <li>Requires additional overhead for tracking</li>
+                        <li>May not be optimal for all workloads</li>
+                    </ul>
+                    <div class="example">
+                        Example: For same sequence, total seek time = 314<br>
+                        Path: 50 → 43 → 24 → 16 → 82 → 140 → 170 → 190
+                    </div>
+                </div>
+            </div>
+
+            <div class="algorithm-card">
+                <h2>C-LOOK</h2>
+                <div class="card-content">
+                    <p>C-LOOK is a modified version of LOOK and SCAN. The head starts from the first request in one direction and moves toward the last request in that direction, serving all requests in between. After reaching the last request, it jumps to the first remaining request on the opposite side and continues servicing requests in the same direction. Unlike LOOK, C-LOOK serves requests only in one direction during each pass.</p>
+                    <h3>Working:</h3>
+                    <ul>
+                        <li>Head moves in one direction serving requests</li>
+                        <li>Goes only until highest request (not disk end)</li>
+                        <li>Jumps to lowest request without serving</li>
+                        <li>Continues serving from lowest to highest</li>
+                    </ul>
+                    <h3>Advantages:</h3>
+                    <ul>
+                        <li>Better average response time than C-SCAN</li>
+                        <li>More efficient than LOOK for uniform load</li>
+                        <li>Reduced head movement than C-SCAN</li>
+                    </ul>
+                    <h3>Disadvantages:</h3>
+                    <ul>
+                        <li>Complex implementation logic</li>
+                        <li>May cause non-uniform waiting times</li>
+                        <li>Long jumps between request ends</li>
+                    </ul>
+                    <div class="example">
+                        Example: For head at 50 and requests (82,170,43,140,24,16,190), total seek time = 341<br>
+                        Path: 50 → 82 → 140 → 170 → 190 → [jump to 16] → 16 → 24 → 43<br>
+                        Calculation: (190-50) + (190-16) + (43-16) = 140 + 174 + 27 = 341
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-container">
+            <a href="disksched.html" class="animate-button">Try Animation Demo</a>
+        </div>
+    </div>
+</body>
+</html>
