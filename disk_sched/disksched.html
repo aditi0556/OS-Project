@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disk Scheduling Algorithms</title>
+    <link rel="stylesheet" href="disksched.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-button">← Back to Info</a>
+            <h1>Disk Scheduling Algorithms</h1>
+        </div>
+        
+        <div class="algorithm-selector">
+            <select id="algorithm">
+                <option value="FCFS">First Come First Serve (FCFS)</option>
+                <option value="SSTF">Shortest Seek Time First (SSTF)</option>
+                <option value="SCAN">SCAN (Elevator)</option>
+                <option value="CSCAN">Circular SCAN (C-SCAN)</option>
+                <option value="LOOK">LOOK</option>
+                <option value="CLOOK">Circular LOOK (C-LOOK)</option>
+            </select>
+            <div class="direction-selector" id="directionSelector" style="display: none;">
+                <label for="direction">Traversal Direction:</label>
+                <select id="direction">
+                    <option value="right">Right to Left</option>
+                    <option value="left">Left to Right</option>
+                </select>
+            </div>
+        </div>
+        <div class="input-section">
+            <div class="head-input">
+                <label for="initialHead">Initial Head Position (0-199):</label>
+                <input type="number" id="initialHead" value="50" min="0" max="199">
+            </div>
+            <div class="requests-input">
+                <label for="newRequest">Add Request (0-199):</label>
+                <input type="number" id="newRequest" min="0" max="199">
+                <button id="addRequest">Add Request</button>
+            </div>
+            <div class="requests-list">
+                <h3>Current Requests:</h3>
+                <ul id="requestsList"></ul>
+            </div>
+        </div>
+        <div class="visualizer-container">
+            <div class="disk-track" id="diskTrack"></div>
+           
+                <div class="graph" id="graph"></div>
+            
+            <div class="stats">
+                <p>Current Head Position: <span id="currentHead">50</span></p>
+                <p>Current Request: <span id="currentRequest">-</span></p>
+                <p>Distance Moved: <span id="distanceMoved">0</span></p>
+                <p>Total Seek Time: <span id="totalSeekTime">0</span></p>
+            </div>
+            <div class="controls">
+                <button id="prevStep" disabled>Previous Step</button>
+                <button id="nextStep">Next Step</button>
+                <button id="playAnimation">Play Animation</button>
+                <button id="resetAnimation">Reset Animation</button>
+            </div>
+            <div class="sequence-info-container">
+                <h3>Head Movement Sequence</h3>
+                <div id="sequenceList" class="sequence-list"></div>
+            </div>
+        </div>
+    </div>
+    <script src="disksched.js"></script>
+</body>
+</html>
