@@ -191,6 +191,15 @@
       href:  'MMU/index.html',
       bg:    'linear-gradient(155deg,#001018 0%,#00293e 50%,#004060 100%)',
       isNew: true
+    },
+    {
+      title: 'Boot Process',
+      desc:  'Interactive visualization of the Linux boot sequence',
+      by:    '',
+      icon:  'fas fa-power-off',
+      href:  'boot_process/boot_process.html',
+      bg:    'linear-gradient(155deg,#0a0018 0%,#1a0040 50%,#2d0070 100%)',
+      isNew: true
     }
   ];
 
@@ -223,7 +232,7 @@
           </div>
 
           <div class="hero-stats">
-            <div class="stat-chip"><span class="n">14</span><span class="lbl">Modules</span></div>
+            <div class="stat-chip"><span class="n">15</span><span class="lbl">Modules</span></div>
             <div class="stat-chip"><span class="n">8+</span><span class="lbl">Core Topics</span></div>
             <div class="stat-chip"><span class="n">100%</span><span class="lbl">In-Browser</span></div>
             <div class="stat-chip"><span class="n">Live</span><span class="lbl">Simulations</span></div>
@@ -250,7 +259,7 @@
     sec.innerHTML = `
       <div class="wrap">
         <div class="section-head">
-          <span class="section-kicker">14 Interactive Modules</span>
+          <span class="section-kicker">15 Interactive Modules</span>
           <h2>Explore the Curriculum</h2>
           <p>Hover a card to focus — everything else fades away.</p>
         </div>
