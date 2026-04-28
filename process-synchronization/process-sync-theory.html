@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Process Synchronization Theory | OS Emulator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="process-sync.css">
+  <style>
+    .theory-card { background: var(--surface); border-radius: var(--r-lg); padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); }
+    .theory-card h2 { color: var(--cyan); margin-bottom: 16px; }
+    .example-table { background: rgba(0,0,0,0.3); border-radius: 16px; width: 100%; margin: 20px 0; }
+    .back-button { display: inline-block; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+<canvas id="vortex-canvas"></canvas>
+<header class="ps-header">
+  <nav class="ps-nav">
+    <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+    <ul class="ps-nav-links">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="process-sync.html" class="ps-nav-cta">Visualizer</a></li>
+    </ul>
+  </nav>
+</header>
+<div class="wrap" style="margin-top: 100px;">
+  <div class="back-button">
+    <a href="process-sync.html" class="btn-outline"><i class="fas fa-arrow-left"></i> Back to Simulator</a>
+  </div>
+  <h1 class="page-title" style="margin-top: 0;">Process Synchronization Theory</h1>
+
+  <!-- Producer-Consumer Theory -->
+  <div class="theory-card">
+    <h2><i class="fas fa-boxes"></i> Producer‑Consumer (Bounded Buffer)</h2>
+    <p><strong>Concept:</strong> A fixed‑size buffer shared by producers (add data) and consumers (remove data). Requires synchronization to avoid race conditions (e.g., producer overwriting unread data, consumer reading empty buffer).</p>
+    <p><strong>Classic solution using semaphores:</strong></p>
+    <ul>
+      <li><code>empty</code> – counts empty slots (initialized to buffer size)</li>
+      <li><code>full</code> – counts filled slots (initialized to 0)</li>
+      <li><code>mutex</code> – protects buffer access (binary semaphore)</li>
+    </ul>
+    <p><strong>Producer logic:</strong> wait(empty) → wait(mutex) → produce → signal(mutex) → signal(full)</p>
+    <p><strong>Consumer logic:</strong> wait(full) → wait(mutex) → consume → signal(mutex) → signal(empty)</p>
+    <h3>Sample Execution (buffer size = 3)</h3>
+    <table class="example-table">
+      <thead><tr><th>Time</th><th>Event</th><th>Buffer State</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>P0 produces item A</td><td>[A, _, _]</td></tr>
+        <tr><td>1</td><td>P1 produces item B</td><td>[A, B, _]</td></tr>
+        <tr><td>2</td><td>C0 consumes A</td><td>[B, _, _]</td></tr>
+        <tr><td>3</td><td>C1 consumes B</td><td>[_, _, _]</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Readers-Writers Theory -->
+  <div class="theory-card">
+    <h2><i class="fas fa-book"></i> Readers‑Writers Problem</h2>
+    <p><strong>Concept:</strong> Multiple readers can access shared data simultaneously, but writers need exclusive access. Variants: readers‑priority (may starve writers), writers‑priority, and fair (FIFO).</p>
+    <p><strong>Solution (readers‑priority):</strong></p>
+    <ul>
+      <li><code>readCount</code> – number of active readers</li>
+      <li><code>mutex</code> – protects <code>readCount</code></li>
+      <li><code>resourceMutex</code> – ensures writer exclusivity</li>
+    </ul>
+    <p>First reader locks <code>resourceMutex</code>, last reader releases it. Writers wait until <code>readCount == 0</code>.</p>
+    <h3>Sample Trace (readers‑priority)</h3>
+    <table class="example-table">
+      <thead><tr><th>Time</th><th>Action</th><th>Resource State</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>Reader R1 starts → readCount=1</td><td>READING</td></tr>
+        <tr><td>1</td><td>Reader R2 starts → readCount=2</td><td>READING</td></tr>
+        <tr><td>2</td><td>Writer W1 arrives, waits</td><td>READING</td></tr>
+        <tr><td>3</td><td>R1 finishes → readCount=1</td><td>READING</td></tr>
+        <tr><td>4</td><td>R2 finishes → readCount=0 → resource free</td><td>IDLE</td></tr>
+        <tr><td>5</td><td>W1 starts writing</td><td>WRITING</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Dining Philosophers Theory -->
+  <div class="theory-card">
+    <h2><i class="fas fa-utensils"></i> Dining Philosophers</h2>
+    <p><strong>Concept:</strong> N philosophers seated around a table, each needs two forks to eat. Without proper strategy, deadlock (everyone holds one fork) or starvation can occur.</p>
+    <p><strong>Deadlock avoidance strategies:</strong></p>
+    <ul>
+      <li><strong>Resource Hierarchy:</strong> label forks 0..N-1, each philosopher picks up lower‑numbered fork first → breaks circular wait.</li>
+      <li><strong>Asymmetric:</strong> even philosophers pick left then right, odd pick right then left.</li>
+      <li><strong>Arbitrator (waiter):</strong> a central mutex allows only one philosopher to attempt picking forks at a time.</li>
+    </ul>
+    <h3>Sample Execution (Resource Hierarchy, N=5)</h3>
+    <table class="example-table">
+      <thead><tr><th>Philosopher</th><th>Left Fork</th><th>Right Fork</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>P0</td><td>F0</td><td>F1</td><td>takes F0, then F1 → eats</td></tr>
+        <tr><td>P1</td><td>F1</td><td>F2</td><td>waits (F1 held by P0)</td></tr>
+        <tr><td>P2</td><td>F2</td><td>F3</td><td>takes F2, then F3 → eats</td></tr>
+        <tr><td>P3</td><td>F3</td><td>F4</td><td>waits</td></tr>
+        <tr><td>P4</td><td>F4</td><td>F0</td><td>tries lower (F0) but F0 held → waits</td></tr>
+      </tbody>
+    </table>
+    <p>No circular wait → deadlock avoided.</p>
+  </div>
+  <footer>© 2026 OS Emulator — Synchronization Theory</footer>
+</div>
+<script>
+  // Vortex background 
+  (function(){
+    const cvs = document.getElementById('vortex-canvas');
+    if(!cvs) return;
+    const ctx = cvs.getContext('2d');
+    let W=0,H=0,pts=[];
+    const HUES=[{h:240,spread:25},{h:262,spread:22},{h:192,spread:18}];
+    function minHalf(){return Math.min(W,H)*0.5}
+    class Particle{constructor(boot){let hDef=HUES[Math.floor(Math.random()*HUES.length)];this.hue=hDef.h+(Math.random()-0.5)*hDef.spread;this.sat=70+Math.random()*20;this.lit=55+Math.random()*25;this.angle=Math.random()*Math.PI*2;this.r=boot?Math.random()*minHalf():1;this.va=0.0018+Math.random()*0.004;this.vr=(Math.random()>.5?1:-1)*(0.25+Math.random()*0.55);this.size=0.4+Math.random()*1.5;this.life=0;this.maxLife=110+Math.random()*210;}
+    step(){this.angle+=this.va;this.r+=this.vr*0.38;this.life++;if(this.r<1||this.r>minHalf()||this.life>this.maxLife)Object.assign(this,new Particle(false));}
+    paint(){let t=this.life/this.maxLife;let a=t<0.12?t/0.12:t>0.8?(1-t)/0.2:1;let x=W/2+Math.cos(this.angle)*this.r,y=H/2+Math.sin(this.angle)*this.r;ctx.beginPath();ctx.arc(x,y,this.size,0,Math.PI*2);ctx.fillStyle=`hsla(${this.hue},${this.sat}%,${this.lit}%,${(a*0.65).toFixed(2)})`;ctx.fill();}}
+    function resize(){W=cvs.width=window.innerWidth;H=cvs.height=window.innerHeight}
+    function init(){pts=Array.from({length:450},()=>new Particle(true));}
+    function draw(){ctx.fillStyle='rgba(6,6,8,0.17)';ctx.fillRect(0,0,W,H);let g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,minHalf()*0.55);g.addColorStop(0,'rgba(99,102,241,0.05)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);pts.forEach(p=>{p.step();p.paint();});requestAnimationFrame(draw);}
+    window.addEventListener('resize',()=>{resize();init();}); resize(); init(); draw();
+    window.addEventListener('scroll',()=>{document.querySelector('.ps-header')?.classList.toggle('scrolled',window.scrollY>60);});
+  })();
+</script>
+</body>
+</html>
