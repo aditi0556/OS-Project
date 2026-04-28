@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Process Synchronization Visualizer | OS Emulator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="process-sync.css">
+</head>
+<body>
+<canvas id="vortex-canvas"></canvas>
+<header class="ps-header">
+  <nav class="ps-nav">
+    <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+    <ul class="ps-nav-links">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="process-sync-theory.html" class="ps-nav-cta">Theory</a></li>
+    </ul>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div class="page-title">
+    <h1><i class="fas fa-exchange-alt"></i> Process Synchronization</h1>
+    <p>Interactive simulators for three classical problems</p>
+  </div>
+
+  <div class="sync-tabs" id="tabContainer">
+    <button class="tab-btn active" data-tab="producer">🐝 Producer‑Consumer</button>
+    <button class="tab-btn" data-tab="reader">📖 Readers‑Writers</button>
+    <button class="tab-btn" data-tab="dinner">🍽️ Dining Philosophers</button>
+  </div>
+
+  <!-- Producer‑Consumer Pane -->
+  <div id="producer-pane" class="tab-pane active">
+    <div class="glass-card">
+      <h3><i class="fas fa-boxes"></i> Buffer & Agents</h3>
+      <div id="pc-buffer" class="buffer-row"></div>
+      <div class="agents-grid">
+        <div><strong>👨‍🏭 Producers</strong> <div id="pc-producers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div></div>
+        <div><strong>🛒 Consumers</strong> <div id="pc-consumers-list" style="display: flex; gap: 8px; flex-wrap: wrap;"></div></div>
+      </div>
+      <div class="metrics-row">
+        <div class="metric"><div class="metric-value" id="pc-prod-count">0</div><div>Produced</div></div>
+        <div class="metric"><div class="metric-value" id="pc-cons-count">0</div><div>Consumed</div></div>
+        <div class="metric"><div class="metric-value" id="pc-empty-val">0</div><div>Empty slots</div></div>
+        <div class="metric"><div class="metric-value" id="pc-full-val">0</div><div>Full slots</div></div>
+        <div class="metric"><div class="metric-value" id="pc-throughput">0</div><div>Throughput (ops/s)</div></div>
+      </div>
+    </div>
+    <div class="glass-card">
+      <div class="control-grid">
+        <div class="input-group"><label>Buffer size</label><input type="number" id="pc-buffer-size" value="5" min="1" max="12"></div>
+        <div class="input-group"><label>Producers</label><input type="number" id="pc-producers-count" value="2" min="1" max="6"></div>
+        <div class="input-group"><label>Consumers</label><input type="number" id="pc-consumers-count" value="2" min="1" max="6"></div>
+        <div class="input-group"><label>Prod min/max (ms)</label><input type="number" id="pc-prod-min" value="800" step="100"><input type="number" id="pc-prod-max" value="2000" style="margin-top:5px"></div>
+        <div class="input-group"><label>Cons min/max</label><input type="number" id="pc-cons-min" value="800"><input type="number" id="pc-cons-max" value="2000" style="margin-top:5px"></div>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button id="pc-start-btn" class="btn-success"><i class="fas fa-play"></i> Start</button>
+        <button id="pc-stop-btn" class="btn-danger" disabled><i class="fas fa-stop"></i> Stop</button>
+        <button id="pc-reset-btn" class="btn-outline"><i class="fas fa-sync"></i> Reset</button>
+        <button id="pc-preset-high" class="btn-outline">⚡ High Contention</button>
+      </div>
+    </div>
+    <div class="glass-card"><h4>📋 Activity Log</h4><div id="pc-log" class="log-box"></div></div>
+  </div>
+
+  <!-- Readers‑Writers Pane -->
+  <div id="reader-pane" class="tab-pane">
+    <div class="glass-card">
+      <div id="rw-resource-state" class="resource-block">
+        <i class="fas fa-database fa-2x"></i>
+        <div id="rw-status-text">Idle</div>
+        <div id="rw-reader-count">Readers: 0</div>
+        <div id="rw-writer-status">Writer active: No</div>
+      </div>
+      <div class="agents-grid">
+        <div><strong>📖 Readers</strong><div id="rw-readers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div></div>
+        <div><strong>✍️ Writers</strong><div id="rw-writers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div></div>
+      </div>
+      <div class="metrics-row">
+        <div class="metric"><div class="metric-value" id="rw-total-reads">0</div><div>Read ops</div></div>
+        <div class="metric"><div class="metric-value" id="rw-total-writes">0</div><div>Write ops</div></div>
+        <div class="metric"><div class="metric-value" id="rw-fairness">0</div><div>Queue length</div></div>
+      </div>
+    </div>
+    <div class="glass-card">
+      <div class="control-grid">
+        <div class="input-group"><label>Readers</label><input type="number" id="rw-readers-count" value="4" min="1" max="8"></div>
+        <div class="input-group"><label>Writers</label><input type="number" id="rw-writers-count" value="2" min="1" max="5"></div>
+        <div class="input-group"><label>Read min/max</label><input id="rw-read-min" value="800"><input id="rw-read-max" value="2200" style="margin-top:5px"></div>
+        <div class="input-group"><label>Write min/max</label><input id="rw-write-min" value="1000"><input id="rw-write-max" value="2500"></div>
+        <div class="input-group"><label>Priority</label><select id="rw-priority"><option value="readers">Readers Priority</option><option value="writers">Writers Priority</option><option value="fair">Fair (FIFO)</option></select></div>
+      </div>
+      <div style="gap: 12px; display: flex;">
+        <button id="rw-start-btn" class="btn-success">Start</button>
+        <button id="rw-stop-btn" class="btn-danger" disabled>Stop</button>
+        <button id="rw-reset-btn" class="btn-outline">Reset</button>
+        <button id="rw-preset-reader" class="btn-outline">📚 Reader‑heavy</button>
+      </div>
+    </div>
+    <div class="glass-card"><h4>📋 Log</h4><div id="rw-log" class="log-box"></div></div>
+  </div>
+
+  <!-- Dining Philosophers Pane -->
+  <div id="dinner-pane" class="tab-pane">
+    <div class="glass-card">
+      <div id="dp-visual" class="philosopher-table" style="position: relative; min-height: 380px;"></div>
+      <div id="dp-status-list" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 20px 0;"></div>
+      <div class="metrics-row">
+        <div class="metric"><div class="metric-value" id="dp-meals">0</div><div>Total meals</div></div>
+        <div class="metric"><div class="metric-value" id="dp-deadlock">✅ No</div><div>Deadlock</div></div>
+      </div>
+    </div>
+    <div class="glass-card">
+      <div class="control-grid">
+        <div class="input-group"><label>Philosophers</label><input type="number" id="dp-count" value="5" min="3" max="8"></div>
+        <div class="input-group"><label>Think (ms)</label><input id="dp-think-min" value="1000"><input id="dp-think-max" value="2500" style="margin-top:5px"></div>
+        <div class="input-group"><label>Eat (ms)</label><input id="dp-eat-min" value="1000"><input id="dp-eat-max" value="2000"></div>
+        <div class="input-group"><label>Strategy</label><select id="dp-strategy"><option value="arbitrator">Resource Hierarchy</option><option value="asymmetric">Asymmetric</option></select></div>
+      </div>
+      <div>
+        <button id="dp-start-btn" class="btn-success">Start</button>
+        <button id="dp-stop-btn" class="btn-danger" disabled>Stop</button>
+        <button id="dp-reset-btn" class="btn-outline">Reset</button>
+        <button id="dp-preset-deadlock" class="btn-outline">⚠️ Deadlock‑prone</button>
+      </div>
+    </div>
+    <div class="glass-card"><h4>📋 Log</h4><div id="dp-log" class="log-box"></div></div>
+  </div>
+
+  <footer>© 2026 OS Emulator — Advanced Synchronization Simulator</footer>
+</div>
+
+<script src="process-sync.js"></script>
+<script>
+  // Vortex background 
+  (function(){
+    const cvs = document.getElementById('vortex-canvas');
+    if(!cvs) return;
+    const ctx = cvs.getContext('2d');
+    let W=0,H=0,pts=[];
+    const HUES=[{h:240,spread:25},{h:262,spread:22},{h:192,spread:18}];
+    function minHalf(){return Math.min(W,H)*0.5}
+    class Particle{constructor(boot){let hDef=HUES[Math.floor(Math.random()*HUES.length)];this.hue=hDef.h+(Math.random()-0.5)*hDef.spread;this.sat=70+Math.random()*20;this.lit=55+Math.random()*25;this.angle=Math.random()*Math.PI*2;this.r=boot?Math.random()*minHalf():1;this.va=0.0018+Math.random()*0.004;this.vr=(Math.random()>.5?1:-1)*(0.25+Math.random()*0.55);this.size=0.4+Math.random()*1.5;this.life=0;this.maxLife=110+Math.random()*210;}
+    step(){this.angle+=this.va;this.r+=this.vr*0.38;this.life++;if(this.r<1||this.r>minHalf()||this.life>this.maxLife)Object.assign(this,new Particle(false));}
+    paint(){let t=this.life/this.maxLife;let a=t<0.12?t/0.12:t>0.8?(1-t)/0.2:1;let x=W/2+Math.cos(this.angle)*this.r,y=H/2+Math.sin(this.angle)*this.r;ctx.beginPath();ctx.arc(x,y,this.size,0,Math.PI*2);ctx.fillStyle=`hsla(${this.hue},${this.sat}%,${this.lit}%,${(a*0.65).toFixed(2)})`;ctx.fill();}}
+    function resize(){W=cvs.width=window.innerWidth;H=cvs.height=window.innerHeight}
+    function init(){pts=Array.from({length:450},()=>new Particle(true));}
+    function draw(){ctx.fillStyle='rgba(6,6,8,0.17)';ctx.fillRect(0,0,W,H);let g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,minHalf()*0.55);g.addColorStop(0,'rgba(99,102,241,0.05)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);pts.forEach(p=>{p.step();p.paint();});requestAnimationFrame(draw);}
+    window.addEventListener('resize',()=>{resize();init();}); resize(); init(); draw();
+    window.addEventListener('scroll',()=>{document.querySelector('.ps-header')?.classList.toggle('scrolled',window.scrollY>60);});
+  })();
+</script>
+</body>
+</html>
