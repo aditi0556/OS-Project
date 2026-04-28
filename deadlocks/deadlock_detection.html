@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deadlock Detection Tool</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+  <canvas id="vortex-canvas"></canvas>
+
+  <header class="ps-header">
+    <nav class="ps-nav">
+      <a href="index.html" class="ps-logo">Deadlock<span>Simulator</span></a>
+      <ul class="ps-nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="deadlock_detection.html" class="ps-nav-cta">Detection</a></li>
+        <li><a href="deadlock_avoidance.html">Avoidance</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="page-spacer"></div>
+
+  <main class="container">
+    <div class="page-top-link">
+      <a href="index.html" class="back-link">Back to Home</a>
+    </div>
+
+    <h1>Deadlock Detection Tool</h1>
+    <p class="hero-copy text-center">This strategy allows the system to enter a deadlock state, detect it, and then recover. It works by tracking resource allocation and identifying cycles in a Resource Allocation Graph.</p>
+
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="card">
+          <h2>Input Section</h2>
+          <div class="inline-grid">
+            <div class="form-group">
+              <label for="process-count">Number of Processes</label>
+              <input type="number" id="process-count" min="1" max="8" value="3">
+            </div>
+            <div class="form-group">
+              <label for="resource-count">Number of Resources</label>
+              <input type="number" id="resource-count" min="1" max="6" value="3">
+            </div>
+          </div>
+          <div class="stack-actions">
+            <button type="button" id="generate-matrices">Generate Inputs</button>
+            <button type="button" class="button-gray" id="fill-detection-sample">Fill Sample Data</button>
+            <button type="button" id="detect-deadlock">Detect Deadlock</button>
+            <button type="button" class="button-gray" id="reset-detection-inputs">Reset</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>How Detection Works</h2>
+          <ul class="feature-list">
+            <li>Allocation values show which resources each process already holds.</li>
+            <li>Request values show which resources each process is waiting for.</li>
+            <li>The tool builds a wait-for graph from those relationships.</li>
+            <li>A cycle in that graph indicates a deadlock in this simplified model.</li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="main-content">
+        <div class="card">
+          <h2>Allocation Matrix</h2>
+          <div class="table-wrap" id="allocation-matrix"></div>
+        </div>
+
+        <div class="card">
+          <h2>Request Matrix</h2>
+          <div class="table-wrap" id="request-matrix"></div>
+        </div>
+
+        <div class="card">
+          <h2>Detection Result</h2>
+          <div id="result-section">
+            <div id="detection-result" class="status-banner status-neutral">
+              <div class="status-title">Ready to analyze</div>
+              <p>Generate or fill in the matrices, then run the detector to inspect the result data.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Result Data</h2>
+          <div id="result-data" class="info-panel">
+            <p>No result data generated yet.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="ps-footer">
+    <div class="ps-foot-inner">
+      <a href="index.html" class="ps-logo">Deadlock<span>Simulator</span></a>
+      <p>&copy; 2026 Deadlock Simulator. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="index.js"></script>
+  <script>
+    const detectionState = {
+      processCount: 3,
+      resourceCount: 3,
+      defaultAllocation: [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+      ],
+      defaultRequest: [
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 0]
+      ]
+    };
+
+    function createMatrixTable(containerId, rows, columns, prefix, values) {
+      const container = document.getElementById(containerId);
+      const table = document.createElement('table');
+      const head = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      headRow.innerHTML = `<th>Process</th>${Array.from({ length: columns }, (_, columnIndex) => `<th>R${columnIndex + 1}</th>`).join('')}`;
+      head.appendChild(headRow);
+      table.appendChild(head);
+
+      const body = document.createElement('tbody');
+
+      for (let rowIndex = 0; rowIndex < rows; rowIndex += 1) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>P${rowIndex + 1}</td>`;
+
+        for (let columnIndex = 0; columnIndex < columns; columnIndex += 1) {
+          const cell = document.createElement('td');
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.min = '0';
+          input.value = values?.[rowIndex]?.[columnIndex] ?? 0;
+          input.id = `${prefix}-${rowIndex}-${columnIndex}`;
+          cell.appendChild(input);
+          row.appendChild(cell);
+        }
+
+        body.appendChild(row);
+      }
+
+      table.appendChild(body);
+      container.innerHTML = '';
+      container.appendChild(table);
+    }
+
+    function renderDetectionMatrices() {
+      const processCount = Number(document.getElementById('process-count').value) || 1;
+      const resourceCount = Number(document.getElementById('resource-count').value) || 1;
+      detectionState.processCount = processCount;
+      detectionState.resourceCount = resourceCount;
+
+      createMatrixTable('allocation-matrix', processCount, resourceCount, 'allocation');
+      createMatrixTable('request-matrix', processCount, resourceCount, 'request');
+      resetDetectionOutput();
+    }
+
+    function fillDetectionSample() {
+      document.getElementById('process-count').value = detectionState.defaultAllocation.length;
+      document.getElementById('resource-count').value = detectionState.defaultAllocation[0].length;
+      detectionState.processCount = detectionState.defaultAllocation.length;
+      detectionState.resourceCount = detectionState.defaultAllocation[0].length;
+
+      createMatrixTable('allocation-matrix', detectionState.processCount, detectionState.resourceCount, 'allocation', detectionState.defaultAllocation);
+      createMatrixTable('request-matrix', detectionState.processCount, detectionState.resourceCount, 'request', detectionState.defaultRequest);
+      resetDetectionOutput();
+    }
+
+    function resetDetectionOutput() {
+      document.getElementById('detection-result').className = 'status-banner status-neutral';
+      document.getElementById('detection-result').innerHTML = `
+        <div class="status-title">Ready to analyze</div>
+        <p>Generate or fill in the matrices, then run the detector to inspect the result data.</p>
+      `;
+      document.getElementById('result-data').innerHTML = '<p>No result data generated yet.</p>';
+    }
+
+    function resetDetectionInputs() {
+      createMatrixTable('allocation-matrix', detectionState.processCount, detectionState.resourceCount, 'allocation');
+      createMatrixTable('request-matrix', detectionState.processCount, detectionState.resourceCount, 'request');
+      resetDetectionOutput();
+    }
+
+    function readMatrix(prefix, rows, columns) {
+      return Array.from({ length: rows }, (_, rowIndex) => (
+        Array.from({ length: columns }, (_, columnIndex) => {
+          const value = Number(document.getElementById(`${prefix}-${rowIndex}-${columnIndex}`).value);
+          return Number.isFinite(value) && value >= 0 ? value : 0;
+        })
+      ));
+    }
+
+    function buildWaitForGraph(allocation, request) {
+      const graph = Array.from({ length: detectionState.processCount }, () => []);
+
+      for (let requester = 0; requester < detectionState.processCount; requester += 1) {
+        for (let resource = 0; resource < detectionState.resourceCount; resource += 1) {
+          if (request[requester][resource] <= 0) {
+            continue;
+          }
+
+          for (let holder = 0; holder < detectionState.processCount; holder += 1) {
+            if (holder !== requester && allocation[holder][resource] > 0) {
+              graph[requester].push(holder);
+            }
+          }
+        }
+      }
+
+      return graph.map((edges) => [...new Set(edges)]);
+    }
+
+    function detectCycle(graph) {
+      const visited = new Array(graph.length).fill(false);
+      const stack = new Array(graph.length).fill(false);
+      const parent = new Array(graph.length).fill(-1);
+
+      function visit(node) {
+        visited[node] = true;
+        stack[node] = true;
+
+        for (const neighbor of graph[node]) {
+          if (!visited[neighbor]) {
+            parent[neighbor] = node;
+            const result = visit(neighbor);
+            if (result) {
+              return result;
+            }
+          } else if (stack[neighbor]) {
+            const cycle = [neighbor];
+            let current = node;
+
+            while (current !== neighbor && current !== -1) {
+              cycle.push(current);
+              current = parent[current];
+            }
+
+            cycle.push(neighbor);
+            cycle.reverse();
+            return cycle;
+          }
+        }
+
+        stack[node] = false;
+        return null;
+      }
+
+      for (let node = 0; node < graph.length; node += 1) {
+        if (!visited[node]) {
+          const cycle = visit(node);
+          if (cycle) {
+            return cycle;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function runDeadlockDetection() {
+      const allocation = readMatrix('allocation', detectionState.processCount, detectionState.resourceCount);
+      const request = readMatrix('request', detectionState.processCount, detectionState.resourceCount);
+      const waitForGraph = buildWaitForGraph(allocation, request);
+      const cycle = detectCycle(waitForGraph);
+      const hasCycle = Boolean(cycle);
+      const resultPanel = document.getElementById('detection-result');
+      const resultData = document.getElementById('result-data');
+
+      resultPanel.className = `status-banner ${hasCycle ? 'status-unsafe' : 'status-safe'}`;
+      resultPanel.innerHTML = `
+        <div class="status-title">${hasCycle ? 'Deadlock Detected' : 'No Deadlock'}</div>
+        <p>${hasCycle
+          ? `A cycle was found in the wait-for graph: ${cycle.map((processIndex) => `P${processIndex + 1}`).join(' -> ')}.`
+          : 'No cycle was found in the wait-for graph, so the current state is not deadlocked in this model.'}
+        </p>
+      `;
+
+      const relationshipLines = waitForGraph
+        .map((edges, processIndex) => `P${processIndex + 1} waits for: ${edges.length ? edges.map((holder) => `P${holder + 1}`).join(', ') : 'none'}`);
+
+      resultData.innerHTML = `
+        <div class="matrix-grid">
+          <div class="matrix-card">
+            <h3>Process to Resource Requests</h3>
+            <div>${request.flatMap((row, processIndex) =>
+              row.map((value, resourceIndex) => value > 0
+                ? `<span class="legend-chip">P${processIndex + 1} -> R${resourceIndex + 1} (${value})</span>`
+                : '').filter(Boolean)
+            ).join('') || '<p>No pending requests.</p>'}</div>
+          </div>
+          <div class="matrix-card">
+            <h3>Resource to Process Allocations</h3>
+            <div>${allocation.flatMap((row, processIndex) =>
+              row.map((value, resourceIndex) => value > 0
+                ? `<span class="legend-chip">R${resourceIndex + 1} -> P${processIndex + 1} (${value})</span>`
+                : '').filter(Boolean)
+            ).join('') || '<p>No active allocations.</p>'}</div>
+          </div>
+          <div class="matrix-card">
+            <h3>Wait-for Graph</h3>
+            <div>${relationshipLines.map((line) => `<span class="legend-chip">${escapeHtml(line)}</span>`).join('')}</div>
+          </div>
+          <div class="matrix-card">
+            <h3>Interpretation</h3>
+            <p>${hasCycle
+              ? 'A circular wait exists in the generated wait-for graph, so the current allocation state is deadlocked.'
+              : 'No circular wait exists in the generated wait-for graph, so the current state is not deadlocked in this model.'}</p>
+            <p style="margin-top:10px;">${hasCycle
+              ? `Detected cycle: ${cycle.map((processIndex) => `P${processIndex + 1}`).join(' -> ')}`
+              : 'No cycle detected in the wait-for graph.'}</p>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('generate-matrices').addEventListener('click', renderDetectionMatrices);
+    document.getElementById('fill-detection-sample').addEventListener('click', fillDetectionSample);
+    document.getElementById('detect-deadlock').addEventListener('click', runDeadlockDetection);
+    document.getElementById('reset-detection-inputs').addEventListener('click', resetDetectionInputs);
+
+    renderDetectionMatrices();
+  </script>
+</body>
+
+</html>
