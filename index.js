@@ -105,7 +105,7 @@
       desc:  "Detection, prevention and Banker's algorithm",
       by:    '',
       icon:  'fas fa-random',
-      href:  'deadlock/index.html',
+      href:  'deadlock/deadlock.html',
       bg:    'linear-gradient(155deg,#100020 0%,#300050 50%,#4a0070 100%)'
     },
     {
