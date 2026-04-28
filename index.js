@@ -87,7 +87,7 @@
     {
       title: 'CPU Scheduling',
       desc:  'Round-robin, SJF and priority algorithms visualised',
-      by:    'Aditi Sinha',
+      by:    '',
       icon:  'fas fa-clock',
       href:  'process_scheduler/process_scheduler.html',
       bg:    'linear-gradient(155deg,#020c14 0%,#0a2540 50%,#0d3b6e 100%)'
@@ -127,7 +127,7 @@
     {
       title: 'Page Replacement',
       desc:  'FIFO, LRU, Optimal — live page fault simulation',
-      by:    '',
+      by:    'Aditi Sinha',
       icon:  'fas fa-project-diagram',
       href:  'page_replacement/pagereplacement_theory.html',
       bg:    'linear-gradient(155deg,#0a0010 0%,#220035 50%,#3d0060 100%)'

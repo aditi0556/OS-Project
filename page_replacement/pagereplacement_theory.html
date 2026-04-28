@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Replacement — OS Emulator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="pagereplacement.css">
+</head>
+<body>
+
+  <header>
+    <nav>
+      <a href="../index.html" class="logo">OS<span>Emulator</span></a>
+      <ul class="navigation">
+        <li><a href="../index.html#topics">← All Modules</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+
+    <section class="page-hero">
+      <div class="wrap">
+        <div class="hero-eyebrow"><span class="hero-dot"></span>Memory Management</div>
+        <h1>Page Replacement <span class="h1-grad">Algorithms</span></h1>
+        <p class="hero-sub">Choose an algorithm, configure your inputs, then step through or animate the simulation to see exactly how each page replacement strategy behaves.</p>
+      </div>
+    </section>
+
+    <section class="sim-section">
+      <div class="wrap">
+        <div class="sim-layout">
+
+          <!-- LEFT: controls -->
+          <aside class="sim-panel">
+
+            <div class="panel-block">
+              <p class="panel-label">Algorithm</p>
+              <div class="algo-selector" id="algoSelector"></div>
+            </div>
+
+            <div class="panel-block">
+              <p class="panel-label">Inputs</p>
+              <div class="field">
+                <label for="referenceString">Reference String</label>
+                <input type="text" id="referenceString"
+                  value="7,0,1,2,0,3,0,4,2,3,0,3,2,1,2,0,1,7,0,1"
+                  placeholder="e.g. 1,2,3,4,1,2,5">
+                <span class="field-hint">Comma-separated page numbers</span>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="frameCount">Frames</label>
+                  <input type="number" id="frameCount" min="1" max="10" value="3">
+                </div>
+                <div class="field">
+                  <label for="speed">Speed</label>
+                  <select id="speed">
+                    <option value="1500">Slow</option>
+                    <option value="750" selected>Medium</option>
+                    <option value="300">Fast</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-block">
+              <div class="ctrl-actions">
+                <button type="button" id="runBtn"   class="btn-primary"><i class="fas fa-play"></i> Run</button>
+                <button type="button" id="stepBtn"  class="btn-ghost"><i class="fas fa-forward-step"></i> Step</button>
+                <button type="button" id="resetBtn" class="btn-ghost"><i class="fas fa-rotate-left"></i> Reset</button>
+              </div>
+            </div>
+
+            <div class="panel-block">
+              <p class="panel-label">Statistics</p>
+              <div class="stat-grid">
+                <div class="stat-item">
+                  <span class="stat-val" id="statRefs">0</span>
+                  <span class="stat-key">Processed</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-val" id="statTotal">0</span>
+                  <span class="stat-key">Total Refs</span>
+                </div>
+                <div class="stat-item stat-item--fault">
+                  <span class="stat-val" id="statFaults">0</span>
+                  <span class="stat-key">Page Faults</span>
+                </div>
+                <div class="stat-item stat-item--hit">
+                  <span class="stat-val" id="statHits">0</span>
+                  <span class="stat-key">Page Hits</span>
+                </div>
+              </div>
+            </div>
+
+          </aside>
+
+          <!-- RIGHT: visualisation -->
+          <div class="sim-main">
+
+            <div class="sim-algo-header">
+              <div class="sim-algo-icon">
+                <i id="algoIcon" class="fas fa-clock-rotate-left"></i>
+              </div>
+              <div>
+                <h2 id="algoTitle">FIFO</h2>
+                <p id="algoSub">First In, First Out</p>
+              </div>
+              <div class="step-badge step-badge--idle" id="stepBadge">Ready</div>
+            </div>
+
+            <div class="vis-block">
+              <p class="vis-label">Reference String</p>
+              <div class="ref-string" id="refStringDisplay"></div>
+            </div>
+
+            <div class="vis-block">
+              <p class="vis-label">Current Frame State</p>
+              <div class="frame-list" id="frameList"></div>
+            </div>
+
+            <div class="vis-block">
+              <p class="vis-label">Step-by-step Timeline</p>
+              <div class="timeline-scroll">
+                <table class="timeline-table">
+                  <thead id="timelineHead"></thead>
+                  <tbody id="timelineBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-inner">
+        <div class="logo">OS<span>Emulator</span></div>
+        <p>&copy; 2026 OS Emulator Project. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- algorithms.js MUST load before pagereplacement.js -->
+  <script src="algorithms.js"></script>
+  <script src="pagereplacement.js"></script>
+
+</body>
+</html>
