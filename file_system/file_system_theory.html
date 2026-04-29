@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File System Theory - OS Emulator</title>
+    <link rel="stylesheet" href="../index.css"> <!-- Reusing main index.css for general styling -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* General layout similar to process_scheduler.html for consistency */
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #060608;
+            --surface: rgba(255, 255, 255, 0.04);
+            --surface2: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.07);
+            --border2: rgba(255, 255, 255, 0.14);
+            --indigo: #6366f1;
+            --indigo-g: rgba(99, 102, 241, 0.18);
+            --violet: #8b5cf6;
+            --cyan: #06b6d4;
+            --text: #ededf0;
+            --muted: rgba(237, 237, 240, 0.48);
+            --subtle: rgba(237, 237, 240, 0.24);
+            --ease: cubic-bezier(.4, 0, .2, 1);
+            --r: 14px;
+            --r-lg: 20px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        p {
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .theory-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* ── tabs ── */
+        .tabs {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1.5rem;
+            border-radius: var(--r);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            text-align: left;
+            font-weight: 600;
+            font-size: .85rem;
+            color: var(--muted);
+            transition: all .3s var(--ease);
+            border-left: 3px solid transparent;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab:last-child {
+            border-bottom: none;
+        }
+
+        .tab:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .tab.active {
+            background: var(--indigo-g);
+            border-left-color: var(--indigo);
+            color: #a5b4fc;
+        }
+
+        .tab.active:hover {
+            background: var(--indigo-g);
+        }
+
+        .algo-content {
+            display: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            backdrop-filter: blur(12px);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .algo-content.active {
+            display: block;
+            animation: fadeIn .5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .algo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: .5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .algo-title {
+            display: flex;
+            align-items: center;
+        }
+
+        .algo-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--indigo);
+            color: #fff;
+            border-radius: 50%;
+            margin-right: 1rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 0 14px rgba(99, 102, 241, .35);
+        }
+
+        h2 {
+            color: var(--text);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            letter-spacing: -.02em;
+        }
+
+        h3 {
+            color: #a5b4fc;
+            font-size: 1.15rem;
+            margin: 1.5rem 0 .75rem 0;
+            font-weight: 700;
+        }
+
+        h4 {
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .theory-section {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 1.25rem;
+            border-radius: var(--r);
+            margin-bottom: 1.5rem;
+        }
+
+        ul {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: .5rem;
+            color: var(--muted);
+            font-size: .9rem;
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        code {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            padding: .25rem .5rem;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: .85rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--subtle);
+            font-size: .8rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--border);
+            position: relative;
+            z-index: 2;
+        }
+        .back-link, .simulate-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--indigo);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .82rem;
+            box-shadow: 0 0 20px rgba(99, 102, 241, .35);
+            transition: box-shadow .25s, translate .25s;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+        .back-link:hover, .simulate-button:hover {
+            translate: 0 -1px;
+            box-shadow: 0 0 36px rgba(99, 102, 241, .5);
+        }
+
+        @media (max-width: 768px) {
+            .theory-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Vortex background similar to other pages -->
+    <canvas id="vortex-canvas"></canvas>
+
+    <header class="ps-header">
+        <nav class="ps-nav">
+            <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+            <ul class="ps-nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="file_system_sim.html">Simulator</a></li>
+                <li><a href="file_system_sim.html" class="ps-nav-cta">Try It Live</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div style="height:80px;"></div> <!-- Spacer for fixed header -->
+
+    <div class="container">
+        <div style="margin: 0 0 20px 0;">
+            <a href="../index.html" class="back-link">
+                <span style="font-size: 16px;">⬅</span>
+                <span>Back to Home</span>
+            </a>
+        </div>
+        <h1><i class="fas fa-hdd" style="margin-right:10px"></i> File System Management: Theory</h1>
+
+        <div class="theory-layout">
+            <div class="sidebar">
+                <div class="tabs">
+                    <div class="tab active" onclick="showContent('sequential-allocation')">Sequential Allocation</div>
+                    <div class="tab" onclick="showContent('indexed-allocation')">Indexed Allocation</div>
+                    <div class="tab" onclick="showContent('linked-allocation')">Linked Allocation</div>
+                    <div class="tab" onclick="showContent('single-level-directory')">Single-Level Directory</div>
+                    <div class="tab" onclick="showContent('two-level-directory')">Two-Level Directory</div>
+                    <div class="tab" onclick="showContent('tree-structured-directory')">Tree-Structured Directory</div>
+                    <div class="tab" onclick="showContent('dag-structure')">Directed Acyclic Graph (DAG) Structure</div>
+                </div>
+                <a href="file_system_sim.html" class="simulate-button">Visualize Simulation</a>
+            </div>
+
+            <div class="main-content">
+                <!-- Sequential Allocation -->
+                <div id="sequential-allocation" class="algo-content active">
+                    <div class="algo-header">
+                        <div class="algo-title">
+                            <div class="algo-icon"><i class="fas fa-bars"></i></div>
+                            <h2>Sequential Allocation</h2>
+                        </div>
+                    </div>
+                    <div class="theory-section">
+                        <h3>Theory</h3>
+                        <p>In <strong>Sequential Allocation</strong>, each file occupies a set of contiguous blocks on the disk. This method is simple to implement and provides excellent performance for sequential access.</p>
+                        <ul>
+                            <li><strong>Simple</strong>: Easy to implement and understand.</li>
+                            <li><strong>Fast Sequential Access</strong>: Reading blocks sequentially is very efficient.</li>
+                            <li><strong>Direct Access</strong>: Possible to directly access any block if the starting address and length are known.</li>
+                        </ul>
+                        <h3>Disadvantages</h3>
+                        <ul>
+                            <li><strong>External Fragmentation</strong>: As files are created and deleted, free disk space becomes fragmented into many small, non-contiguous pieces, making it difficult to allocate large new files.</li>
+                            <li><strong>Fixed Size</strong>: Files cannot grow dynamically beyond their initial allocated space without being moved to a larger contiguous block, which is costly.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Indexed Allocation -->
+                <div id="indexed-allocation" class="algo-content">
+                    <div class="algo-header">
+                        <div class="algo-title">
+                            <div class="algo-icon"><i class="fas fa-th"></i></div>
+                            <h2>Indexed Allocation</h2>
+                        </div>
+                    </div>
+                    <div class="theory-section">
+                        <h3>Theory</h3>
+                        <p><strong>Indexed Allocation</strong> solves the external fragmentation problem of sequential allocation. Each file has an <em>index block</em>, which is a dedicated block that stores pointers to all the data blocks belonging to that file. Data blocks can be scattered anywhere on the disk.</p>
+                        <ul>
+                            <li><strong>Eliminates External Fragmentation</strong>: Free space can be scattered.</li>
+                            <li><strong>Direct Access</strong>: Any block can be accessed directly by looking up its pointer in the index block.</li>
+                            <li><strong>Dynamic File Size</strong>: Files can grow dynamically, limited only by the size of the index block and available free blocks.</li>
+                        </ul>
+                        <h3>Disadvantages</h3>
+                        <ul>
+                            <li><strong>Overhead of Index Block</strong>: Each file requires at least one entire block for the index, even for small files.</li>
+                            <li><strong>Limited File Size</strong>: The maximum file size is determined by the number of pointers an index block can hold. Large files might require multiple levels of indexing.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Linked Allocation -->
+                <div id="linked-allocation" class="algo-content">
+                    <div class="algo-header">
+                        <div class="algo-title">
+                            <div class="algo-icon"><i class="fas fa-link"></i></div>
+                            <h2>Linked Allocation</h2>
+                        </div>
+                    </div>
+                    <div class="theory-section">
+                        <h3>Theory</h3>
+                        <p>In <strong>Linked Allocation</strong>, each file is a linked list of disk blocks. Each block contains a pointer to the next block in the chain. The directory entry for a file stores the address of the first and last blocks.</p>
+                        <ul>
+                            <li><strong>No External Fragmentation</strong>: Any free block can be used, regardless of its location.</li>
+                            <li><strong>Dynamic File Size</strong>: Files can grow as long as there are free blocks available.</li>
+                        </ul>
+                        <h3>Disadvantages</h3>
+                        <ul>
+                            <li><strong>Poor Random Access Performance</strong>: To access a block, all preceding blocks must be read to follow the chain of pointers.</li>
+                            <li><strong>Space Overhead</strong>: Each data block must reserve space for a pointer to the next block, slightly reducing storage efficiency.</li>
+                            <li><strong>Reliability Issues</strong>: A single corrupted pointer can lead to the loss of the rest of the file.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Single-Level Directory -->
+                <div id="single-level-directory" class="algo-content">
+                    <div class="algo-header">
+                        <div class="algo-title">
+                            <div class="algo-icon"><i class="fas fa-folder"></i></div>
+                            <h2>Single-Level Directory</h2>
+                        </div>
+                    </div>
+                    <div class="theory-section">
+                        <h3>Theory</h3>
+                        <p>The <strong>Single-Level Directory</strong> is the simplest directory structure. All files are contained in a single directory, which is shared by all users. This is suitable for single-user systems or small, simple applications.</p>
+                        <ul>
+                            <li><strong>Simplicity</strong>: Easy to implement and manage.</li>
+                            <li><strong>Fast Access</strong>: Locating files is straightforward as there's only one place to look.</li>
+                        </ul>
+                        <h3>Disadvantages</h3>
+                        <ul>
+                            <li><strong>Naming Conflicts</strong>: All files must have unique names, which becomes problematic with multiple users or many files.</li>
+                            <li><strong>Lack of Organization</strong>: Difficult to group related files, leading to clutter and poor user experience.</li>
+                            <li><strong>No Access Control</strong>: All users have access to all files.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Two-Level Directory -->
+                <div id="two-level-directory" class="algo-content">
+                    <div class="algo-header">
+                        <div class="algo-title">
+                            <div class="algo-icon"><i class="fas fa-folder-open"></i></div>
+                            <h2>Two-Level Directory</h2>
+                        </div>
+                    </div>
+                    <div class="theory-section">
+                        <h3>Theory</h3>
+                        <p>In a <strong>Two-Level Directory</strong> structure, each user has their own separate directory. There is a master file directory (MFD) that contains entries for each user directory, and each user directory contains entries for their files. This solves the naming conflict problem of the single-level directory.</p>
+                        <ul>
+                            <li><strong>Solves Naming Conflicts</strong>: Users can have files with the same name without conflict.</li>
+                            <li><strong>User Isolation</strong>: Users' files are logically separated, enhancing privacy.</li>
+                        </ul>
+                        <h3>Disadvantages</h3>
+                        <ul>
+                            <li><strong>No File Sharing</strong>: It is difficult to share files between users without duplicating them.</li>
+                            <li><strong>Inefficient for Group Work</strong>: Not ideal for collaborative projects where multiple users need to access common files.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tree-Structured Directory -->
+                <div id="tree-structured-directory" class="algo-content">
+                    <div class="algo-header">
+                        <div class="algo-title">
+                            <div class="algo-icon"><i class="fas fa-folder-tree"></i></div>
+                            <h2>Tree-Structured Directory</h2>
+                        </div>
+                    </div>
+                    <div class="theory-section">
+                        <h3>Theory</h3>
+                        <p>The <strong>Tree-Structured Directory</strong> is the most common directory structure. It allows users to create their own subdirectories, organizing files in a hierarchical (tree-like) manner. Each file and directory has a unique path from the root.</p>
+                        <ul>
+                            <li><strong>Hierarchical Organization</strong>: Intuitive and flexible way to organize files.</li>
+                            <li><strong>Easy Navigation</strong>: Clear paths make it easy to locate files.</li>
+                            <li><strong>Solves Naming Conflicts</strong>: Files in different branches can have the same name.</li>
+                        </ul>
+                        <h3>Disadvantages</h3>
+                        <ul>
+                            <li><strong>Difficult File Sharing</strong>: Sharing files across different branches of the tree can be complex.</li>
+                            <li><strong>Redundancy</strong>: If a file needs to be in multiple categories, it might be duplicated.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Directed Acyclic Graph (DAG) Structure -->
+                <div id="dag-structure" class="algo-content">
+                    <div class="algo-header">
+                        <div class="algo-title">
+                            <div class="algo-icon"><i class="fas fa-diagram-project"></i></div>
+                            <h2>Directed Acyclic Graph (DAG) Structure</h2>
+                        </div>
+                    </div>
+                    <div class="theory-section">
+                        <h3>Theory</h3>
+                        <p>A <strong>Directed Acyclic Graph (DAG) Structure</strong> is an extension of the tree-structured directory that allows files and subdirectories to be shared. This means a file or subdirectory can appear in multiple directories, allowing for more flexible organization and collaboration.</p>
+                        <ul>
+                            <li><strong>Flexible File Sharing</strong>: Files can be easily shared by linking them into multiple directories.</li>
+                            <li><strong>Eliminates Redundancy</strong>: Avoids duplicating files when they belong to multiple categories.</li>
+                        </ul>
+                        <h3>Disadvantages</h3>
+                        <ul>
+                            <li><strong>Complexity</strong>: More complex to implement and manage due to the possibility of multiple links.</li>
+                            <li><strong>Deletion Issues</strong>: Deleting a file that is linked in multiple directories can be tricky (e.g., dangling pointers).</li>
+                            <li><strong>Cycle Detection</strong>: Algorithms are needed to ensure no cycles are created, preventing infinite loops during traversal.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 OS Emulator Project. All rights reserved.</p>
+    </footer>
+
+    <script src="../index.js"></script> <!-- Reusing vortex background from index.js -->
+    <script>
+        // Function to show content based on tab click
+        function showContent(contentId) {
+            const contents = document.querySelectorAll('.algo-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(contentId).classList.add('active');
+
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.tab[onclick="showContent('${contentId}')"]`).classList.add('active');
+        }
+
+        // Initialize the first tab as active on load
+        document.addEventListener('DOMContentLoaded', () => {
+            showContent('sequential-allocation');
+
+            // Header scroll effect - copied from process_scheduler.html
+            window.addEventListener('scroll', function () {
+                const hdr = document.querySelector('.ps-header');
+                if (hdr) hdr.classList.toggle('scrolled', window.scrollY > 60);
+            }, { passive: true });
+        });
+
+        // Initialize vortex canvas on this page too, if not already handled by index.js in a better way
+        // This is a fallback if index.js's canvas logic doesn't apply to this new page correctly
+        (function () {
+            const cvs = document.getElementById('vortex-canvas');
+            if (!cvs) return;
+            const ctx = cvs.getContext('2d');
+            let W = 0, H = 0, pts = [];
+            const HUES = [{ h: 240, spread: 25 }, { h: 262, spread: 22 }, { h: 192, spread: 18 }];
+            function minHalf() { return Math.min(W, H) * 0.5 }
+            class Particle {
+                constructor(boot) {
+                    const hDef = HUES[Math.floor(Math.random() * HUES.length)];
+                    this.hue = hDef.h + (Math.random() - 0.5) * hDef.spread;
+                    this.sat = 70 + Math.random() * 20; this.lit = 55 + Math.random() * 25;
+                    this.angle = Math.random() * Math.PI * 2;
+                    this.r = boot ? Math.random() * minHalf() : 1;
+                    this.va = 0.0018 + Math.random() * 0.004;
+                    this.vr = (Math.random() > 0.5 ? 1 : -1) * (0.25 + Math.random() * 0.55);
+                    this.size = 0.4 + Math.random() * 1.5; this.life = 0;
+                    this.maxLife = 110 + Math.random() * 210;
+                }
+                step() { this.angle += this.va; this.r += this.vr * 0.38; this.life += 1; if (this.r < 1 || this.r > minHalf() || this.life > this.maxLife) Object.assign(this, new Particle(false)) }
+                paint() { const t = this.life / this.maxLife; const a = t < 0.12 ? t / 0.12 : t > 0.8 ? (1 - t) / 0.2 : 1; const x = W / 2 + Math.cos(this.angle) * this.r; const y = H / 2 + Math.sin(this.angle) * this.r; ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2); ctx.fillStyle = `hsla(${this.hue},${this.sat}%,${this.lit}%,${(a * 0.65).toFixed(2)})`; ctx.fill() }
+            }
+            function resize() { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight }
+            function init() { pts = Array.from({ length: 400 }, () => new Particle(true)) }
+            function draw() { ctx.fillStyle = 'rgba(6,6,8,0.17)'; ctx.fillRect(0, 0, W, H); const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, minHalf() * 0.55); g.addColorStop(0, 'rgba(99,102,241,0.05)'); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); pts.forEach(p => { p.step(); p.paint() }); requestAnimationFrame(draw) }
+            window.addEventListener('resize', () => { resize(); init() });
+            resize(); init(); draw();
+        }());
+    </script>
+</body>
+</html>
