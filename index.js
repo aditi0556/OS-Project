@@ -141,20 +141,12 @@
       bg:    'linear-gradient(155deg,#000d1a 0%,#002040 50%,#003566 100%)'
     },
     {
-      title: 'File Allocation',
-      desc:  'Contiguous, linked and indexed allocation methods',
+      title: 'File System Simulator',
+      desc:  'Unified file allocation and directory organization with DAG support',
       by:    '',
-      icon:  'fas fa-cogs',
-      href:  'FileAllocation/FileAllocation.html',
+      icon:  'fas fa-hdd',
+      href:  'file_system/file_system.html',
       bg:    'linear-gradient(155deg,#030a20 0%,#081d50 50%,#0d2d7a 100%)'
-    },
-    {
-      title: 'File Organization',
-      desc:  'Directory structures and file management',
-      by:    '',
-      icon:  'fas fa-folder-open',
-      href:  'file-dir-sim/index.html',
-      bg:    'linear-gradient(155deg,#080018 0%,#1a0040 50%,#2e0060 100%)'
     },
     {
       title: 'IPC',

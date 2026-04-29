@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File System Simulator — OS Emulator</title>
+  <link rel="stylesheet" href="../index.css">
+  <link rel="stylesheet" href="file_system.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- ── NAV (matches index.css floating pill nav) ── -->
+  <header id="site-header">
+    <nav>
+      <a href="../index.html" class="logo">OS<span>Emulator</span></a>
+      <ul class="navigation">
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="#" class="nav-cta">File System</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="page-wrap">
+
+    <a href="../index.html" class="back-link">
+      <i class="fas fa-arrow-left" style="font-size:.7rem"></i> Back to Home
+    </a>
+
+    <div class="page-title">
+      <i class="fas fa-hdd"></i>File System Simulator
+    </div>
+    <p class="page-subtitle">
+      Explore file allocation methods and directory structures interactively.
+    </p>
+
+    <!-- ── APP GRID ── -->
+    <div class="app-grid">
+
+      <!-- ════ SIDEBAR ════ -->
+      <aside class="sidebar">
+
+        <!-- Settings -->
+        <div class="card">
+          <h2><i class="fas fa-sliders-h" style="margin-right:6px;color:var(--indigo)"></i>Settings</h2>
+
+          <div class="form-group">
+            <label for="allocation-method">File Allocation Method</label>
+            <select id="allocation-method">
+              <option value="sequential">Sequential (Contiguous)</option>
+              <option value="indexed">Indexed</option>
+              <option value="linked">Linked</option>
+            </select>
+          </div>
+
+          <div id="alloc-info-box" class="alloc-info"></div>
+
+          <div class="divider"></div>
+
+          <div class="form-group">
+            <label for="directory-structure">Directory Structure</label>
+            <select id="directory-structure">
+              <option value="single-level">Single-Level Directory</option>
+              <option value="two-level">Two-Level Directory</option>
+              <option value="tree-structured">Tree-Structured Directory</option>
+              <option value="dag">Directed Acyclic Graph (DAG)</option>
+            </select>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="form-group">
+            <label for="disk-size">Disk Size (blocks)</label>
+            <input type="number" id="disk-size" min="16" max="256" value="64">
+          </div>
+
+          <button class="btn btn-gray" id="reset-disk-btn">
+            <i class="fas fa-redo"></i> Reset Disk
+          </button>
+        </div>
+
+        <!-- Create File -->
+        <div class="card">
+          <h2><i class="fas fa-file-plus" style="margin-right:6px;color:#22c55e"></i>Create File</h2>
+
+          <div class="form-group">
+            <label for="file-name">File Name</label>
+            <input type="text" id="file-name" placeholder="e.g., report.txt" maxlength="24">
+          </div>
+          <div class="form-group">
+            <label for="file-size">Size (blocks)</label>
+            <input type="number" id="file-size" min="1" max="30" value="3">
+          </div>
+          <button class="btn btn-green" id="create-file-btn">
+            <i class="fas fa-plus"></i> Create File
+          </button>
+        </div>
+
+        <!-- Create Directory -->
+        <div class="card" id="create-dir-section">
+          <h2><i class="fas fa-folder-plus" style="margin-right:6px;color:var(--cyan)"></i>Create Directory</h2>
+          <p id="dir-hint" class="hint-text" style="margin-bottom:10px"></p>
+
+          <div class="form-group">
+            <label for="dir-name">Directory Name</label>
+            <input type="text" id="dir-name" placeholder="e.g., documents" maxlength="24">
+          </div>
+          <button class="btn btn-gray" id="create-dir-btn" style="border-color:rgba(6,182,212,.4);color:var(--cyan)">
+            <i class="fas fa-folder-plus"></i> Create Directory
+          </button>
+        </div>
+
+        <!-- Selected Item + Delete -->
+        <div class="card">
+          <h2><i class="fas fa-mouse-pointer" style="margin-right:6px;color:var(--muted)"></i>Selection</h2>
+          <div id="selection-info" class="hint-text" style="margin-bottom:10px">
+            Click a block or tree node to select.
+          </div>
+          <button class="btn btn-red" id="delete-selected-btn" disabled>
+            <i class="fas fa-trash"></i> Delete Selected
+          </button>
+        </div>
+
+        <!-- Disk Stats -->
+        <div class="card">
+          <h2><i class="fas fa-chart-pie" style="margin-right:6px;color:var(--violet)"></i>Disk Usage</h2>
+          <div class="stats-row">
+            <span class="stat-k">Total</span>
+            <span id="total-blocks">64</span>
+          </div>
+          <div class="stats-row">
+            <span class="stat-k">Used</span>
+            <span id="used-blocks">0</span>
+          </div>
+          <div class="stats-row">
+            <span class="stat-k">Free</span>
+            <span id="free-blocks">64</span>
+          </div>
+          <div class="usage-bar-track">
+            <div class="usage-bar-fill" id="disk-usage-bar"></div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ════ MAIN CONTENT ════ -->
+      <main>
+
+        <!-- Disk Visualization -->
+        <div class="card">
+          <h2 style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <i class="fas fa-th" style="color:var(--indigo)"></i>
+            Disk Blocks
+            <span id="alloc-method-badge" class="method-badge sequential" style="margin-left:auto">Sequential</span>
+          </h2>
+          <div id="disk-grid" class="disk-grid"></div>
+          <div id="disk-legend" class="disk-legend" style="margin-top:10px"></div>
+        </div>
+
+        <!-- Directory Structure -->
+        <div class="card">
+          <h2 style="display:flex;align-items:center;gap:8px">
+            <i class="fas fa-sitemap" style="color:var(--cyan)"></i>
+            Directory Structure
+            <span id="struct-name" style="margin-left:auto;font-size:.72rem;color:var(--subtle);text-transform:none;letter-spacing:0;font-weight:500">Single-Level</span>
+          </h2>
+          <div id="dir-visual-wrap"></div>
+        </div>
+
+        <!-- Output Log -->
+        <div class="card">
+          <h2 style="display:flex;align-items:center;gap:8px">
+            <i class="fas fa-terminal" style="color:var(--muted)"></i>
+            Output Log
+            <button id="clear-log-btn" style="margin-left:auto;background:none;border:1px solid var(--border2);color:var(--subtle);padding:3px 10px;border-radius:999px;font-size:.68rem;cursor:pointer;font-family:'Outfit',sans-serif;">Clear</button>
+          </h2>
+          <div id="output-log" class="output-log">
+            <div class="log-line log-info">[ready] File System Simulator loaded.</div>
+          </div>
+        </div>
+
+      </main>
+    </div><!-- /app-grid -->
+
+  </div><!-- /page-wrap -->
+
+  <footer style="position:relative;z-index:2;border-top:1px solid var(--border);padding:24px 0;margin-top:20px">
+    <div class="page-wrap" style="padding:0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <a href="../index.html" class="logo">OS<span>Emulator</span></a>
+      <p style="font-size:.75rem;margin:0">&copy; 2025 OS Emulator Project. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="file_system.js"></script>
+</body>
+</html>
