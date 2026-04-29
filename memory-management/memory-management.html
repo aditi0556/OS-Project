@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Memory Allocation Emulator</title>
+    <link rel="stylesheet" href="../index.css">
+    <link rel="stylesheet" href="memory_management.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">OS<span>Emulator</span></div>
+            <ul class="navigation">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="#memory-simulator">Memory Simulator</a></li>
+                <li><a href="#how-it-works">How it works</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="memory-hero">
+        <div class="container">
+            <h1>OS Memory Allocation Emulator</h1>
+            <p>Interactive simulation of memory allocation techniques</p>
+        </div>
+    </section>
+
+    <section id="memory-simulator" class="simulator-section">
+        <div class="container">
+            <div class="simulator-card">
+                <h2>Memory Allocation Techniques</h2>
+                
+                <div class="allocation-options">
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="allocation-type" value="mvt" id="mvt-option" checked>
+                            <span class="radio-label">MVT (Multiprogramming with Variable Number of Tasks)</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="allocation-type" value="mft" id="mft-option">
+                            <span class="radio-label">MFT (Multiprogramming with Fixed Number of Tasks)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="input-controls">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="totalMemory">Total Memory Size (in units):</label>
+                            <input type="number" id="totalMemory" value="100" min="100" max="5000" step="100">
+                        </div>
+                        <div class="input-group" id="partitionSizeGroup" style="display: none;">
+                            <label for="partitionSize">Partition Size (in units):</label>
+                            <input type="number" id="partitionSize" value="20" min="10" max="500" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="processName">Process Name:</label>
+                            <input type="text" id="processName" placeholder="P1">
+                        </div>
+                        <div class="input-group">
+                            <label for="processSize">Process Size (in units):</label>
+                            <input type="number" id="processSize" value="20" min="10" max="500" step="10">
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="allocateMemory" class="btn-primary">
+                            <i class="fas fa-plus"></i> Allocate Memory
+                        </button>
+                        <button id="compactMemory" class="btn-secondary">
+                            <i class="fas fa-compress"></i> Compact Memory
+                        </button>
+                        <button id="resetMemory" class="btn-danger">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div class="memory-visualization">
+                    <h3>Memory Map</h3>
+                    <div class="memory-map-container">
+                        <div id="memoryMap" class="memory-map"></div>
+                        <div class="memory-legend">
+                            <div class="legend-item">
+                                <div class="legend-color free"></div>
+                                <span>Free Memory</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color allocated"></div>
+                                <span>Allocated Memory</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-section">
+                    <h3>Active Processes</h3>
+                    <div id="activeProcesses" class="process-list">
+                        <p class="empty-state">No active processes</p>
+                    </div>
+                </div>
+
+                <div class="statistics-section">
+                    <h3>Memory Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-label">Total Memory:</span>
+                            <span id="totalMemoryStat" class="stat-value">1000 units</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Used Memory:</span>
+                            <span id="usedMemoryStat" class="stat-value">0 units</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Free Memory:</span>
+                            <span id="freeMemoryStat" class="stat-value">1000 units</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Fragmentation:</span>
+                            <span id="fragmentationStat" class="stat-value">0 units</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="info-section">
+        <div class="container">
+            <h2>How it works</h2>
+            <div class="info-cards">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-random"></i>
+                    </div>
+                    <h3>MVT (Multiprogramming with Variable Number of Tasks)</h3>
+                    <p>Memory is divided into variable-sized partitions. Processes are allocated memory based on their exact size requirements, allowing efficient memory utilization. Supports dynamic allocation and deallocation.</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-th"></i>
+                    </div>
+                    <h3>MFT (Multiprogramming with Fixed Number of Tasks)</h3>
+                    <p>Memory is divided into fixed-sized partitions. Each process must fit within a partition, leading to potential internal fragmentation when process size doesn't match partition size.</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>External Fragmentation</h3>
+                    <p>Occurs when free memory is scattered in small non-contiguous blocks. Total free memory may be sufficient, but no single block is large enough to accommodate a new process.</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3>Internal Fragmentation</h3>
+                    <p>Occurs when allocated memory is larger than required by the process. The unused space within the allocated partition is wasted and cannot be used by other processes.</p>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-compress-arrows-alt"></i>
+                    </div>
+                    <h3>Compaction</h3>
+                    <p>Process of moving all allocated memory blocks to one end to combine all free blocks into a single large block. Eliminates external fragmentation but requires system overhead.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">OS<span>Emulator</span></div>
+                <p>&copy; 2025 OS Emulator Project. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="memory_management.js"></script>
+</body>
+</html>
