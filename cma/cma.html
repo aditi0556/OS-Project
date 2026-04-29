@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMA Simulator — OSEmulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="cma.css">
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo" onclick="window.location.href='../index.html'" style="cursor:pointer;">OS<span class="logo-em">Emulator</span></div>
+    <div class="nav-pill">
+      <a href="../index.html">Home</a>
+      <a href="../index.html#topics">Topics</a>
+      <a href="../index.html#team">Team</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Memory Management Module
+      </div>
+      <h1>Contiguous Memory<br>Allocation</h1>
+      <p class="hero-desc">
+        Visualize First-Fit, Next-Fit, Best-Fit &amp; Worst-Fit allocation
+        strategies with animated, step-by-step simulation.
+      </p>
+    </div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div class="page">
+
+    <!-- SETUP ROW -->
+    <div class="setup-row">
+
+      <!-- BLOCK SETUP -->
+      <div class="panel block-setup">
+        <div class="ptitle">Memory Blocks</div>
+        <div class="irow">
+          <div>
+            <label for="blockCount">Number of Blocks</label>
+            <input type="number" id="blockCount" min="1" max="8" value="3">
+          </div>
+          <button class="btn btn-purple" onclick="initializeMemoryBlocks()">Set Blocks</button>
+        </div>
+        <div id="blockSizesContainer" class="field-grid"></div>
+      </div>
+
+      <!-- PROCESS SETUP -->
+      <div class="panel process-setup" id="processSetup" style="display:none;">
+        <div class="ptitle">Processes</div>
+        <div class="irow">
+          <div>
+            <label for="processCount">Number of Processes</label>
+            <input type="number" id="processCount" min="1" max="12" value="3">
+          </div>
+          <button class="btn btn-purple" onclick="generateProcessInputs()">Set Processes</button>
+        </div>
+        <div id="processSizesContainer" class="field-grid"></div>
+      </div>
+
+    </div><!-- /setup-row -->
+
+    <!-- STRATEGY PANEL -->
+    <div class="panel strategy-panel" id="strategyPanel" style="display:none;">
+      <div class="ptitle">Allocation Strategy</div>
+      <div class="strat-grid" id="strategyGrid"></div>
+      <div class="act-row" id="actionRow"></div>
+    </div>
+
+    <!-- VISUALIZATION -->
+    <div class="viz-panel">
+      <div class="ptitle">Memory Visualization</div>
+      <div class="speed-row" id="speedControlMount"></div>
+      <div class="status-bar" id="statusBar"></div>
+      <div class="mem-labels" id="memLabels"></div>
+      <div class="strip-wrap" id="memoryBlock">
+        <div class="empty-strip"><span>Memory not initialized</span></div>
+      </div>
+    </div>
+
+    <!-- ALLOCATION TABLES -->
+    <div id="allocationTables"></div>
+
+    <!-- WAITING PROCESSES -->
+    <div class="process-list" id="processList"></div>
+
+  </div><!-- /page -->
+
+  <!-- STRATEGY INFO DIALOG -->
+  <div class="dialog-overlay"></div>
+  <div class="strategy-info-dialog">
+    <button class="close-dialog">&times;</button>
+    <h3></h3>
+    <p></p>
+  </div>
+
+  <script src="cma.js"></script>
+</body>
+</html>
