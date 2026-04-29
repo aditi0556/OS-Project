@@ -59,8 +59,8 @@
           <ul class="feature-list">
             <li>Allocation values show which resources each process already holds.</li>
             <li>Request values show which resources each process is waiting for.</li>
-            <li>The tool builds a wait-for graph from those relationships.</li>
-            <li>A cycle in that graph indicates a deadlock in this simplified model.</li>
+            <li>The tool builds blocking relationships from those resource dependencies.</li>
+            <li>A circular wait in that graph indicates deadlock in the single-instance model.</li>
           </ul>
         </div>
       </aside>
@@ -115,43 +115,55 @@
       ],
       defaultRequest: [
         [0, 0, 1],
-        [0, 1, 0],
-        [1, 0, 0]
+        [1, 0, 0],
+        [0, 1, 0]
       ]
     };
 
-    function createMatrixTable(containerId, rows, columns, prefix, values) {
+    function createRelationInputs(containerId, rows, columns, prefix, values, helperText) {
       const container = document.getElementById(containerId);
-      const table = document.createElement('table');
-      const head = document.createElement('thead');
-      const headRow = document.createElement('tr');
-      headRow.innerHTML = `<th>Process</th>${Array.from({ length: columns }, (_, columndeadlock) => `<th>R${columndeadlock + 1}</th>`).join('')}`;
-      head.appendChild(headRow);
-      table.appendChild(head);
+      container.innerHTML = '';
 
-      const body = document.createElement('tbody');
+      const intro = document.createElement('p');
+      intro.className = 'section-copy';
+      intro.style.marginBottom = '14px';
+      intro.textContent = `${helperText} Use comma-separated values such as R1, R3. Only single-instance entries are allowed. Valid resources: ${Array.from({ length: columns }, (_, column) => `R${column + 1}`).join(', ')}.`;
+      container.appendChild(intro);
+
+      const group = document.createElement('div');
+      group.className = 'stack-actions';
 
       for (let rowdeadlock = 0; rowdeadlock < rows; rowdeadlock += 1) {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>P${rowdeadlock + 1}</td>`;
+        const field = document.createElement('div');
+        field.className = 'form-group';
+        const label = document.createElement('label');
+        label.setAttribute('for', `${prefix}-${rowdeadlock}`);
+        label.textContent = `P${rowdeadlock + 1}`;
 
-        for (let columndeadlock = 0; columndeadlock < columns; columndeadlock += 1) {
-          const cell = document.createElement('td');
-          const input = document.createElement('input');
-          input.type = 'number';
-          input.min = '0';
-          input.value = values?.[rowdeadlock]?.[columndeadlock] ?? 0;
-          input.id = `${prefix}-${rowdeadlock}-${columndeadlock}`;
-          cell.appendChild(input);
-          row.appendChild(cell);
-        }
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = `${prefix}-${rowdeadlock}`;
+        input.placeholder = 'Example: R1, R2';
+        input.value = values?.[rowdeadlock] ?? '';
 
-        body.appendChild(row);
+        field.appendChild(label);
+        field.appendChild(input);
+        group.appendChild(field);
       }
 
-      table.appendChild(body);
-      container.innerHTML = '';
-      container.appendChild(table);
+      container.appendChild(group);
+    }
+
+    function serializeMatrixRows(matrix) {
+      return matrix.map((row) => row
+        .flatMap((value, resourcedeadlock) => {
+          if (value <= 0) {
+            return [];
+          }
+
+          return value === 1 ? [`R${resourcedeadlock + 1}`] : [`R${resourcedeadlock + 1}:${value}`];
+        })
+        .join(', '));
     }
 
     function renderDetectionMatrices() {
@@ -160,8 +172,8 @@
       detectionState.processCount = processCount;
       detectionState.resourceCount = resourceCount;
 
-      createMatrixTable('allocation-matrix', processCount, resourceCount, 'allocation');
-      createMatrixTable('request-matrix', processCount, resourceCount, 'request');
+      createRelationInputs('allocation-matrix', processCount, resourceCount, 'allocation', null, 'Enter the resources currently held by each process.');
+      createRelationInputs('request-matrix', processCount, resourceCount, 'request', null, 'Enter the resources each process is still waiting for.');
       resetDetectionOutput();
     }
 
@@ -171,8 +183,22 @@
       detectionState.processCount = detectionState.defaultAllocation.length;
       detectionState.resourceCount = detectionState.defaultAllocation[0].length;
 
-      createMatrixTable('allocation-matrix', detectionState.processCount, detectionState.resourceCount, 'allocation', detectionState.defaultAllocation);
-      createMatrixTable('request-matrix', detectionState.processCount, detectionState.resourceCount, 'request', detectionState.defaultRequest);
+      createRelationInputs(
+        'allocation-matrix',
+        detectionState.processCount,
+        detectionState.resourceCount,
+        'allocation',
+        serializeMatrixRows(detectionState.defaultAllocation),
+        'Enter the resources currently held by each process.'
+      );
+      createRelationInputs(
+        'request-matrix',
+        detectionState.processCount,
+        detectionState.resourceCount,
+        'request',
+        serializeMatrixRows(detectionState.defaultRequest),
+        'Enter the resources each process is still waiting for.'
+      );
       resetDetectionOutput();
     }
 
@@ -186,22 +212,76 @@
     }
 
     function resetDetectionInputs() {
-      createMatrixTable('allocation-matrix', detectionState.processCount, detectionState.resourceCount, 'allocation');
-      createMatrixTable('request-matrix', detectionState.processCount, detectionState.resourceCount, 'request');
+      createRelationInputs('allocation-matrix', detectionState.processCount, detectionState.resourceCount, 'allocation', null, 'Enter the resources currently held by each process.');
+      createRelationInputs('request-matrix', detectionState.processCount, detectionState.resourceCount, 'request', null, 'Enter the resources each process is still waiting for.');
       resetDetectionOutput();
     }
 
-    function readMatrix(prefix, rows, columns) {
-      return Array.from({ length: rows }, (_, rowdeadlock) => (
-        Array.from({ length: columns }, (_, columndeadlock) => {
-          const value = Number(document.getElementById(`${prefix}-${rowdeadlock}-${columndeadlock}`).value);
-          return Number.isFinite(value) && value >= 0 ? value : 0;
-        })
-      ));
+    function parseResourceList(text, columns, label) {
+      const row = new Array(columns).fill(0);
+      const seenResources = new Set();
+      const tokens = String(text)
+        .split(',')
+        .map((token) => token.trim())
+        .filter(Boolean);
+
+      tokens.forEach((token) => {
+        const match = token.match(/^R(\d+)(?::(\d+))?$/i);
+        if (!match) {
+          throw new Error(`${label}: "${token}" is not a valid resource entry. Use formats like R1 or R2.`);
+        }
+
+        const resourceIndex = Number(match[1]) - 1;
+        const quantity = Number(match[2] ?? 1);
+        if (resourceIndex < 0 || resourceIndex >= columns) {
+          throw new Error(`${label}: "${token}" refers to a resource outside the selected range.`);
+        }
+
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+          throw new Error(`${label}: "${token}" must use a positive single instance.`);
+        }
+
+        if (quantity !== 1) {
+          throw new Error(`${label}: "${token}" is invalid because this detector only supports single-instance resources.`);
+        }
+
+        if (seenResources.has(resourceIndex)) {
+          throw new Error(`${label}: resource R${resourceIndex + 1} is repeated. Single-instance input allows each resource only once per process.`);
+        }
+
+        seenResources.add(resourceIndex);
+        row[resourceIndex] = 1;
+      });
+
+      return row;
     }
 
-    function buildWaitForGraph(allocation, request) {
+    function readMatrix(prefix, rows, columns) {
+      return Array.from({ length: rows }, (_, rowdeadlock) => {
+        const value = document.getElementById(`${prefix}-${rowdeadlock}`).value;
+        return parseResourceList(value, columns, `${prefix === 'allocation' ? 'Allocation' : 'Request'} for P${rowdeadlock + 1}`);
+      });
+    }
+
+    function validateSingleInstanceAllocation(allocation) {
+      for (let resourcedeadlock = 0; resourcedeadlock < detectionState.resourceCount; resourcedeadlock += 1) {
+        const holders = [];
+
+        for (let processdeadlock = 0; processdeadlock < detectionState.processCount; processdeadlock += 1) {
+          if (allocation[processdeadlock][resourcedeadlock] > 0) {
+            holders.push(`P${processdeadlock + 1}`);
+          }
+        }
+
+        if (holders.length > 1) {
+          throw new Error(`Allocation for R${resourcedeadlock + 1} is invalid. In the single-instance model, a resource can be allocated to only one process at a time. Current holders: ${holders.join(', ')}.`);
+        }
+      }
+    }
+
+    function buildBlockingGraph(allocation, request) {
       const graph = Array.from({ length: detectionState.processCount }, () => []);
+      const edgeLookup = new Map();
 
       for (let requester = 0; requester < detectionState.processCount; requester += 1) {
         for (let resource = 0; resource < detectionState.resourceCount; resource += 1) {
@@ -210,17 +290,27 @@
           }
 
           for (let holder = 0; holder < detectionState.processCount; holder += 1) {
-            if (holder !== requester && allocation[holder][resource] > 0) {
-              graph[requester].push(holder);
+            if (holder === requester || allocation[holder][resource] <= 0) {
+              continue;
             }
+
+            graph[requester].push(holder);
+            const key = `${requester}-${holder}`;
+            if (!edgeLookup.has(key)) {
+              edgeLookup.set(key, []);
+            }
+            edgeLookup.get(key).push(resource);
           }
         }
       }
 
-      return graph.map((edges) => [...new Set(edges)]);
+      return {
+        graph: graph.map((edges) => [...new Set(edges)]),
+        edgeLookup
+      };
     }
 
-    function detectCycle(graph) {
+    function findHighlightedCycle(graph, edgeLookup) {
       const visited = new Array(graph.length).fill(false);
       const stack = new Array(graph.length).fill(false);
       const parent = new Array(graph.length).fill(-1);
@@ -237,17 +327,37 @@
               return result;
             }
           } else if (stack[neighbor]) {
-            const cycle = [neighbor];
+            const processCycle = [neighbor];
             let current = node;
 
             while (current !== neighbor && current !== -1) {
-              cycle.push(current);
+              processCycle.push(current);
               current = parent[current];
             }
 
-            cycle.push(neighbor);
-            cycle.reverse();
-            return cycle;
+            processCycle.push(neighbor);
+            processCycle.reverse();
+
+            const steps = [];
+            for (let index = 0; index < processCycle.length - 1; index += 1) {
+              const from = processCycle[index];
+              const to = processCycle[index + 1];
+              const resources = edgeLookup.get(`${from}-${to}`) ?? [];
+              const resource = resources[0];
+
+              if (resource !== undefined) {
+                steps.push({
+                  fromProcess: from,
+                  resource,
+                  toProcess: to
+                });
+              }
+            }
+
+            return {
+              processCycle,
+              steps
+            };
           }
         }
 
@@ -267,6 +377,20 @@
       return null;
     }
 
+    function formatResourceList(values, prefix) {
+      return values
+        .flatMap((value, resourcedeadlock) => {
+          if (value <= 0) {
+            return [];
+          }
+
+          return value === 1
+            ? [`${prefix}${resourcedeadlock + 1}`]
+            : [`${prefix}${resourcedeadlock + 1}:${value}`];
+        })
+        .join(', ');
+    }
+
     function escapeHtml(text) {
       return String(text)
         .replaceAll('&', '&amp;')
@@ -276,26 +400,206 @@
         .replaceAll("'", '&#39;');
     }
 
+    function renderCycleText(highlightedCycle) {
+      if (!highlightedCycle?.steps?.length) {
+        return '';
+      }
+
+      const parts = [`P${highlightedCycle.steps[0].fromProcess + 1}`];
+      highlightedCycle.steps.forEach((step) => {
+        parts.push(`R${step.resource + 1}`);
+        parts.push(`P${step.toProcess + 1}`);
+      });
+
+      return parts.join(' -> ');
+    }
+
+    function renderResourceAllocationGraph(allocation, request, highlightedCycle, cycleProcesses) {
+      const processCount = detectionState.processCount;
+      const resourceCount = detectionState.resourceCount;
+      const width = 860;
+      const height = Math.max(320, Math.max(processCount, resourceCount) * 84);
+      const processX = 170;
+      const resourceX = width - 170;
+      const resourceSpacing = height / (resourceCount + 1);
+      const processSpacing = height / (processCount + 1);
+      const deadlockedSet = new Set(cycleProcesses.map((processdeadlock) => `P${processdeadlock + 1}`));
+      const cycleSteps = highlightedCycle?.steps ?? [];
+      const cycleRequestEdges = new Set(cycleSteps.map((step) => `${step.fromProcess}-${step.resource}`));
+      const cycleAllocationEdges = new Set(cycleSteps.map((step) => `${step.resource}-${step.toProcess}`));
+      const cycleResources = new Set(cycleSteps.map((step) => `R${step.resource + 1}`));
+      const markerSuffix = highlightedCycle ? 'cycle' : 'normal';
+
+      const processNodes = Array.from({ length: processCount }, (_, index) => ({
+        id: `P${index + 1}`,
+        x: processX,
+        y: (index + 1) * processSpacing
+      }));
+
+      const resourceNodes = Array.from({ length: resourceCount }, (_, index) => ({
+        id: `R${index + 1}`,
+        x: resourceX,
+        y: (index + 1) * resourceSpacing
+      }));
+
+      const allocationEdges = allocation.flatMap((row, processdeadlock) => row.flatMap((value, resourcedeadlock) => {
+        if (value <= 0) {
+          return [];
+        }
+
+        return [{
+          from: resourceNodes[resourcedeadlock],
+          to: processNodes[processdeadlock],
+          label: value > 1 ? String(value) : '',
+          color: cycleAllocationEdges.has(`${resourcedeadlock}-${processdeadlock}`) ? '#f87171' : '#34d399',
+          active: cycleAllocationEdges.has(`${resourcedeadlock}-${processdeadlock}`)
+        }];
+      }));
+
+      const requestEdges = request.flatMap((row, processdeadlock) => row.flatMap((value, resourcedeadlock) => {
+        if (value <= 0) {
+          return [];
+        }
+
+        return [{
+          from: processNodes[processdeadlock],
+          to: resourceNodes[resourcedeadlock],
+          label: value > 1 ? String(value) : '',
+          color: cycleRequestEdges.has(`${processdeadlock}-${resourcedeadlock}`) ? '#f87171' : '#a5b4fc',
+          active: cycleRequestEdges.has(`${processdeadlock}-${resourcedeadlock}`)
+        }];
+      }));
+
+      const renderEdge = (edge, index, dashed) => {
+        const dx = edge.to.x - edge.from.x;
+        const dy = edge.to.y - edge.from.y;
+        const length = Math.sqrt((dx ** 2) + (dy ** 2)) || 1;
+        const startOffset = dashed ? 26 : 18;
+        const endOffset = dashed ? 20 : 26;
+        const startX = edge.from.x + (dx / length) * startOffset;
+        const startY = edge.from.y + (dy / length) * startOffset;
+        const endX = edge.to.x - (dx / length) * endOffset;
+        const endY = edge.to.y - (dy / length) * endOffset;
+        const labelX = (startX + endX) / 2;
+        const labelY = (startY + endY) / 2 - 8;
+
+        return `
+          <g>
+            <line
+              x1="${startX}" y1="${startY}"
+              x2="${endX}" y2="${endY}"
+              stroke="${edge.color}"
+              stroke-width="${edge.active ? '4' : '2.4'}"
+              stroke-dasharray="${dashed ? '8 6' : '0'}"
+              opacity="${edge.active ? '1' : '0.92'}"
+              marker-end="url(#arrow-${markerSuffix}-${index})"
+            ></line>
+            ${edge.label ? `<text class="graph-edge-label" x="${labelX}" y="${labelY}">${escapeHtml(edge.label)}</text>` : ''}
+          </g>
+        `;
+      };
+
+      return `
+        <div class="graph-plot">
+          <svg class="graph-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Resource allocation graph">
+            <defs>
+              ${[...allocationEdges, ...requestEdges].map((edge, index) => `
+                <marker id="arrow-${markerSuffix}-${index}" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0,0 L0,6 L8,3 z" fill="${edge.color}"></path>
+                </marker>
+              `).join('')}
+            </defs>
+
+            ${allocationEdges.map((edge, index) => renderEdge(edge, index, false)).join('')}
+            ${requestEdges.map((edge, index) => renderEdge(edge, allocationEdges.length + index, true)).join('')}
+
+            ${processNodes.map((node) => `
+              <g>
+                <circle
+                  cx="${node.x}"
+                  cy="${node.y}"
+                  r="26"
+                  fill="${deadlockedSet.has(node.id) ? 'rgba(239, 68, 68, 0.18)' : 'rgba(99, 102, 241, 0.18)'}"
+                  stroke="${deadlockedSet.has(node.id) ? '#f87171' : '#818cf8'}"
+                  stroke-width="2"
+                ></circle>
+                <text class="graph-node-label" x="${node.x}" y="${node.y}">${node.id}</text>
+              </g>
+            `).join('')}
+
+            ${resourceNodes.map((node) => `
+              <g>
+                <rect
+                  x="${node.x - 24}"
+                  y="${node.y - 24}"
+                  width="48"
+                  height="48"
+                  rx="14"
+                  fill="${cycleResources.has(node.id) ? 'rgba(239, 68, 68, 0.12)' : 'rgba(6, 182, 212, 0.14)'}"
+                  stroke="${cycleResources.has(node.id) ? '#f87171' : '#22d3ee'}"
+                  stroke-width="2"
+                ></rect>
+                <text class="graph-node-label" x="${node.x}" y="${node.y}">${node.id}</text>
+              </g>
+            `).join('')}
+          </svg>
+        </div>
+        <p class="graph-caption">Solid arrows show resources currently assigned to processes. Dashed arrows show pending requests from processes to resources. Deadlocked processes are red, and the highlighted red path marks one blocking cycle when one can be traced.</p>
+        <div class="graph-legend">
+          <span class="graph-legend-item"><span class="graph-legend-swatch" style="background:#34d399;"></span>Allocated resource edge</span>
+          <span class="graph-legend-item"><span class="graph-legend-swatch" style="background:#a5b4fc;"></span>Pending request edge</span>
+          <span class="graph-legend-item"><span class="graph-legend-swatch" style="background:#f87171;"></span>Deadlock-highlighted path</span>
+        </div>
+      `;
+    }
+
     function runDeadlockDetection() {
-      const allocation = readMatrix('allocation', detectionState.processCount, detectionState.resourceCount);
-      const request = readMatrix('request', detectionState.processCount, detectionState.resourceCount);
-      const waitForGraph = buildWaitForGraph(allocation, request);
-      const cycle = detectCycle(waitForGraph);
-      const hasCycle = Boolean(cycle);
+      let allocation;
+      let request;
       const resultPanel = document.getElementById('detection-result');
       const resultData = document.getElementById('result-data');
 
-      resultPanel.className = `status-banner ${hasCycle ? 'status-unsafe' : 'status-safe'}`;
+      try {
+        allocation = readMatrix('allocation', detectionState.processCount, detectionState.resourceCount);
+        request = readMatrix('request', detectionState.processCount, detectionState.resourceCount);
+        validateSingleInstanceAllocation(allocation);
+      } catch (error) {
+        resultPanel.className = 'status-banner status-unsafe';
+        resultPanel.innerHTML = `
+          <div class="status-title">Invalid Input</div>
+          <p>${escapeHtml(error.message)}</p>
+        `;
+        resultData.innerHTML = `
+          <div class="matrix-card">
+            <h3>Input Rules</h3>
+            <p>Use only single-instance resource names such as R1, R2, or R3.</p>
+            <p style="margin-top:10px;">Entries like R1:2, repeated values such as R1, R1, out-of-range resources, or the same resource allocated to multiple processes are not allowed.</p>
+          </div>
+        `;
+        document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      const blockingGraphData = buildBlockingGraph(allocation, request);
+      const highlightedCycle = findHighlightedCycle(blockingGraphData.graph, blockingGraphData.edgeLookup);
+      const cycleProcesses = highlightedCycle?.processCycle
+        ? [...new Set(highlightedCycle.processCycle.slice(0, -1))]
+        : [];
+      const hasDeadlock = cycleProcesses.length > 0;
+
+      resultPanel.className = `status-banner ${hasDeadlock ? 'status-unsafe' : 'status-safe'}`;
       resultPanel.innerHTML = `
-        <div class="status-title">${hasCycle ? 'Deadlock Detected' : 'No Deadlock'}</div>
-        <p>${hasCycle
-          ? `A cycle was found in the wait-for graph: ${cycle.map((processdeadlock) => `P${processdeadlock + 1}`).join(' -> ')}.`
-          : 'No cycle was found in the wait-for graph, so the current state is not deadlocked in this model.'}
+        <div class="status-title">${hasDeadlock ? 'Deadlock Detected' : 'No Deadlock'}</div>
+        <p>${hasDeadlock
+          ? `A circular wait was found among: ${cycleProcesses.map((processdeadlock) => `P${processdeadlock + 1}`).join(', ')}.`
+          : 'No cycle was found in the blocking graph, so the state is not deadlocked in this single-instance model.'}
         </p>
       `;
 
-      const relationshipLines = waitForGraph
-        .map((edges, processdeadlock) => `P${processdeadlock + 1} waits for: ${edges.length ? edges.map((holder) => `P${holder + 1}`).join(', ') : 'none'}`);
+      const relationshipLines = blockingGraphData.graph
+        .map((edges, processdeadlock) => `P${processdeadlock + 1} blocked by: ${edges.length ? edges.map((holder) => `P${holder + 1}`).join(', ') : 'none'}`);
+
+      const cycleText = renderCycleText(highlightedCycle);
 
       resultData.innerHTML = `
         <div class="matrix-grid">
@@ -316,17 +620,22 @@
             ).join('') || '<p>No active allocations.</p>'}</div>
           </div>
           <div class="matrix-card">
-            <h3>Wait-for Graph</h3>
+            <h3>Blocking Relationships</h3>
             <div>${relationshipLines.map((line) => `<span class="legend-chip">${escapeHtml(line)}</span>`).join('')}</div>
           </div>
           <div class="matrix-card">
+            <h3>Resource Allocation Graph</h3>
+            ${renderResourceAllocationGraph(allocation, request, highlightedCycle, cycleProcesses)}
+          </div>
+          <div class="matrix-card">
             <h3>Interpretation</h3>
-            <p>${hasCycle
-              ? 'A circular wait exists in the generated wait-for graph, so the current allocation state is deadlocked.'
-              : 'No circular wait exists in the generated wait-for graph, so the current state is not deadlocked in this model.'}</p>
-            <p style="margin-top:10px;">${hasCycle
-              ? `Detected cycle: ${cycle.map((processdeadlock) => `P${processdeadlock + 1}`).join(' -> ')}`
-              : 'No cycle detected in the wait-for graph.'}</p>
+            <p>${hasDeadlock
+              ? 'The highlighted cycle represents a circular wait, which means the current state is deadlocked in the single-instance model.'
+              : 'Because there is no circular wait, this state is not deadlocked in the single-instance model.'}</p>
+            <p style="margin-top:10px;">${cycleText
+              ? `Highlighted cycle: ${cycleText}`
+              : 'No deadlock cycle to highlight.'}</p>
+            <p style="margin-top:10px;">Processes in cycle: ${hasDeadlock ? cycleProcesses.map((processdeadlock) => `P${processdeadlock + 1}`).join(', ') : 'none'}</p>
           </div>
         </div>
       `;
