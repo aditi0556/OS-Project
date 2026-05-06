@@ -177,13 +177,13 @@ function updateRwUI() {
   let res = document.getElementById('rw-resource-state');
   let statusSpan = document.getElementById('rw-status-text');
   if (rwState.writeActive) {
-    statusSpan.innerText = '✍️ WRITING';
+    statusSpan.innerText = 'WRITING';
     res.style.border = '2px solid #ef4444';
   } else if (rwState.readCount > 0) {
-    statusSpan.innerText = '📖 READING';
+    statusSpan.innerText = 'READING';
     res.style.border = '2px solid #6366f1';
   } else {
-    statusSpan.innerText = '⏳ IDLE';
+    statusSpan.innerText = 'IDLE';
     res.style.border = '1px solid var(--border)';
   }
   document.getElementById('rw-total-reads').innerText = rwState.totalReads;
@@ -406,8 +406,8 @@ function checkDeadlock(N) {
   for (let i = 0; i < N; i++) if (dpState.forks[i] === undefined) allForksTaken = false;
   if (allForksTaken && Object.keys(dpState.forks).length === N) {
     dpState.deadlockFlag = true;
-    document.getElementById('dp-deadlock').innerHTML = '⚠️ Deadlock!';
-    dpLog('⚠️ DEADLOCK DETECTED! All forks held, no progress.', 'error');
+    document.getElementById('dp-deadlock').innerHTML = 'Deadlock!';
+    dpLog('DEADLOCK DETECTED! All forks held, no progress.', 'error');
     return true;
   }
   return false;
@@ -457,7 +457,7 @@ function resetDP() {
   let N = parseInt(document.getElementById('dp-count').value);
   renderDiningTable(N);
   document.getElementById('dp-meals').innerText = '0';
-  document.getElementById('dp-deadlock').innerHTML = '✅ No';
+  document.getElementById('dp-deadlock').innerHTML = ' No';
   document.getElementById('dp-start-btn').disabled = false;
   document.getElementById('dp-stop-btn').disabled = true;
   document.getElementById('dp-log').innerHTML = '';
