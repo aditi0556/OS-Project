@@ -1,5 +1,4 @@
 // OS Memory Allocation Emulator - MVT and MFT Implementation
-//name - Ankit kumar saran
 class MemoryAllocationEmulator {
     constructor() {
         this.totalMemory = 100;
