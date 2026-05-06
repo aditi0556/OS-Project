@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clock Algorithm Simulator</title>
-  <link rel="stylesheet" href="time.css">
+  <title>Clock Algorithm Frame Table</title>
+  <link rel="stylesheet" href="./time.css">
 </head>
 
 <body>
@@ -13,7 +13,7 @@
 
   <header class="ps-header">
     <nav class="ps-nav">
-      <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+      <a href="#" class="ps-logo">OS<span>Emulator</span></a>
     </nav>
   </header>
 
@@ -21,8 +21,8 @@
 
   <main>
     <section class="container hero-screen">
-      <h1>Clock Algorithm Simulator</h1>
-      <p class="hero-copy text-center">Visualize how the Clock page replacement algorithm gives pages a second chance before replacing them in memory.</p>
+      <h1>Clock Algorithm Frame Table</h1>
+      <p class="hero-copy text-center">Track every page reference with a full table of frame contents, reference bits, pointer position, and hit or miss status.</p>
 
       <div class="app-layout">
         <aside class="sidebar">
@@ -46,10 +46,10 @@
           <div class="card">
             <h2>How It Works</h2>
             <ul class="feature-list horizontal-feature-list">
-              <li><span class="flow-arrow">-&gt;</span><span>Pages are arranged in a circular list of memory frames.</span></li>
-              <li><span class="flow-arrow">-&gt;</span><span>Each frame stores a reference bit that records recent use.</span></li>
-              <li><span class="flow-arrow">-&gt;</span><span>If the pointer finds a referenced page, it clears the bit and gives that page a second chance.</span></li>
-              <li><span class="flow-arrow">-&gt;</span><span>The first frame found with reference bit 0 is replaced.</span></li>
+              <li><span class="flow-arrow">-&gt;</span><span>Each page reference records a full snapshot of all frames.</span></li>
+              <li><span class="flow-arrow">-&gt;</span><span>The table shows which page was requested and whether it was a hit or miss.</span></li>
+              <li><span class="flow-arrow">-&gt;</span><span>Each frame column is paired with its reference bit at that step.</span></li>
+              <li><span class="flow-arrow">-&gt;</span><span>The pointer column shows where the clock hand lands after each decision.</span></li>
             </ul>
           </div>
         </aside>
@@ -73,12 +73,13 @@
             <div id="frame-container" class="stack-visual frame-visual"></div>
           </div>
 
-          <div class="card wide-card timeline-card">
-            <h2>Replacement Timeline</h2>
-            <div id="replacement-log" class="timeline-log">
-              <div class="timeline-item empty-state">
-                <p>No simulation steps yet.</p>
-              </div>
+          <div class="card wide-card">
+            <h2>Frame Table With Reference Bits</h2>
+            <div class="table-wrap">
+              <table id="frame-table">
+                <thead id="frame-table-head"></thead>
+                <tbody id="frame-table-body"></tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -92,31 +93,24 @@
           <div class="summary-card">
             <span class="summary-label">Algorithm</span>
             <span class="summary-value">Clock / Second Chance</span>
-            <p class="summary-note">A practical approximation of LRU using a circular pointer and one reference bit per page.</p>
+            <p class="summary-note">A circular pointer scans the frames and clears reference bits until it finds a replacement candidate.</p>
           </div>
           <div class="summary-card">
-            <span class="summary-label">Advantage</span>
-            <span class="summary-value">Low Overhead</span>
-            <p class="summary-note">The operating system tracks only one reference bit for each frame instead of maintaining a full history.</p>
+            <span class="summary-label">Table Output</span>
+            <span class="summary-value">Per-Reference Snapshot</span>
+            <p class="summary-note">Each row captures the state of memory immediately after one page reference is processed.</p>
           </div>
           <div class="summary-card">
-            <span class="summary-label">Tradeoff</span>
-            <span class="summary-value">Not Always Optimal</span>
-            <p class="summary-note">A frequently used page can remain longer, but the decision is less precise than true least-recently-used replacement.</p>
+            <span class="summary-label">Useful For</span>
+            <span class="summary-value">Step Analysis</span>
+            <p class="summary-note">This layout makes it easier to inspect how the algorithm updates pages and reference bits over time.</p>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="ps-footer">
-    <div class="ps-foot-inner">
-      <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
-      <p>&copy; 2026 OS Emulator. All rights reserved.</p>
-    </div>
-  </footer>
-
-  <script src="time.js"></script>
+  <script src="./time.js"></script>
 </body>
 
 </html>
