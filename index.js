@@ -87,7 +87,7 @@
     {
       title: 'CPU Scheduling',
       desc: 'Round-robin, SJF and priority algorithms visualised',
-      by: '',
+      by: 'Abhyuday K Hedge',
       icon: 'fas fa-clock',
       href: 'process_scheduler/process_scheduler.html',
       bg: 'linear-gradient(155deg,#020c14 0%,#0a2540 50%,#0d3b6e 100%)'
@@ -187,7 +187,7 @@
     {
       title: 'DMA Transfer',
       desc: 'Direct Memory Access vs Programmed I/O comparison',
-      by: '',
+      by: 'Abhyuday K Hedge',
       icon: 'fas fa-bolt',
       href: 'dma/dma.html',
       bg: 'linear-gradient(155deg,#0a0018 0%,#1a0040 50%,#2d0070 100%)',
