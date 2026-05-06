@@ -143,7 +143,7 @@
     {
       title: 'File System Simulator',
       desc: 'Unified file allocation and directory organization with DAG support',
-      by: '',
+      by: 'Ankit Kumar',
       icon: 'fas fa-hdd',
       href: 'file_system/file_system.html',
       bg: 'linear-gradient(155deg,#030a20 0%,#081d50 50%,#0d2d7a 100%)'
@@ -152,7 +152,7 @@
     {
       title: 'RTOS',
       desc: 'Real-time scheduling with deadline tracking',
-      by: '',
+      by: 'Aditi Sinha',
       icon: 'fas fa-microchip',
       href: 'rtos/rtos.html',
       bg: 'linear-gradient(155deg,#150005 0%,#380012 50%,#5e001e 100%)',
