@@ -121,7 +121,7 @@
       desc: 'First-fit, best-fit and worst-fit algorithms',
       by: 'Aniketa R',
       icon: 'fas fa-users',
-      href: 'cma/info.html',
+      href: 'cma/cma.html',
       bg: 'linear-gradient(155deg,#040a1a 0%,#0a1e4a 50%,#0f3070 100%)'
     },
     {
@@ -163,7 +163,7 @@
       desc: 'Address translation and TLB simulation',
       by: 'Aniketa R',
       icon: 'fas fa-sitemap',
-      href: 'MMU/index.html',
+      href: 'mmu/mmu.html',
       bg: 'linear-gradient(155deg,#001018 0%,#00293e 50%,#004060 100%)',
       isNew: true
     },
