@@ -20,7 +20,12 @@ document.addEventListener('DOMContentLoaded', function () {
   let currentProcess = null;
   let quantumProgress = 0;
   let simulationTimer;
-  timeQuantum = timeQuantum - 1;
+
+  let mlfqQ1Quantum = 2;
+  let mlfqQ2Quantum = 4;
+  let mlfqQueues = [[], [], []];
+  let mlfqCurrentLevel = 0;
+  let mlfqQuantumProgress = 0;
 
   const colors = [
     "#6366f1", // Indigo
@@ -61,12 +66,14 @@ document.addEventListener('DOMContentLoaded', function () {
   const queueDisplay = document.getElementById('queue-display');
   const outputCard = document.getElementById('output-card');
   const outputTable = document.getElementById('output-tbody');
+  const mlfqContainer = document.getElementById('mlfq-container');
+  const mlfqQ1Input = document.getElementById('mlfq-q1');
+  const mlfqQ2Input = document.getElementById('mlfq-q2');
 
-  // Update UI based on algorithm
   algorithmSelect.addEventListener('change', function () {
     algorithm = this.value;
 
-    if (algorithm === 'fcfs' || algorithm === 'rr') {
+    if (algorithm === 'fcfs' || algorithm === 'rr' || algorithm === 'mlfq') {
       preemptiveContainer.style.display = 'none';
     } else {
       preemptiveContainer.style.display = 'block';
@@ -78,6 +85,12 @@ document.addEventListener('DOMContentLoaded', function () {
       timeQuantumContainer.style.display = 'none';
     }
 
+    if (algorithm === 'mlfq') {
+      mlfqContainer.style.display = 'block';
+    } else {
+      mlfqContainer.style.display = 'none';
+    }
+
     if (algorithm === 'priority') {
       priorityContainer.style.display = 'block';
     } else {
@@ -85,27 +98,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Update isPreemptive when changed
+
   preemptiveSelect.addEventListener('change', function () {
     isPreemptive = this.value === 'true';
   });
 
-  // Update timeQuantum when changed
+
   timeQuantumInput.addEventListener('change', function () {
-    timeQuantum = Math.max(0, parseInt(this.value || 1) - 1);
-    if (timeQuantum < 1) {
-      timeQuantum = 1;
-      this.value = 1;
-    }
+    timeQuantum = Math.max(1, parseInt(this.value) || 1);
+    this.value = timeQuantum;
   });
 
-  // Update speed when changed
+
   speedInput.addEventListener('input', function () {
     speed = parseInt(this.value);
     speedValue.textContent = speed + 'ms';
   });
 
-  // Add process
+
   addProcessBtn.addEventListener('click', function () {
     const name = processNameInput.value.trim();
     const arrivalTime = parseInt(arrivalTimeInput.value) || 0;
@@ -131,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Start simulation
+
   startBtn.addEventListener('click', function () {
     resetSimulation();
     isRunning = true;
@@ -139,20 +149,20 @@ document.addEventListener('DOMContentLoaded', function () {
     runSimulation();
   });
 
-  // Stop simulation
+
   stopBtn.addEventListener('click', function () {
     isRunning = false;
     updateButtons();
     clearTimeout(simulationTimer);
   });
 
-  // Reset simulation
+
   resetBtn.addEventListener('click', function () {
     resetSimulation();
     updateButtons();
   });
 
-  // Reset simulation function
+
   function resetSimulation() {
     currentTime = 0;
     ganttChart = [];
@@ -164,10 +174,17 @@ document.addEventListener('DOMContentLoaded', function () {
     queue = [];
     clearTimeout(simulationTimer);
 
-    // Reset remaining time for all processes
+    mlfqQueues = [[], [], []];
+    mlfqCurrentLevel = 0;
+    mlfqQuantumProgress = 0;
+    if (mlfqQ1Input) mlfqQ1Quantum = Math.max(1, parseInt(mlfqQ1Input.value) || 2);
+    if (mlfqQ2Input) mlfqQ2Quantum = Math.max(1, parseInt(mlfqQ2Input.value) || 4);
+
+
     processes = processes.map(p => ({
       ...p,
-      remainingTime: p.burstTime
+      remainingTime: p.burstTime,
+      mlfqLevel: 0
     }));
 
     updateCurrentTime();
@@ -178,26 +195,24 @@ document.addEventListener('DOMContentLoaded', function () {
     updateOutputTable();
   }
 
-  // Update buttons based on state
   function updateButtons() {
     startBtn.disabled = isRunning || processes.length === 0;
     stopBtn.disabled = !isRunning;
   }
 
-  // Remove process
+
   function removeProcess(id) {
     processes = processes.filter(p => p.id !== id);
     updateProcessesTable();
   }
 
-  // Update processes table
   function updateProcessesTable() {
     processesTable.innerHTML = '';
 
     processes.forEach(process => {
       const row = document.createElement('tr');
 
-      // Process name with color
+
       const nameCell = document.createElement('td');
       const nameDiv = document.createElement('div');
       nameDiv.style.display = 'flex';
@@ -212,22 +227,22 @@ document.addEventListener('DOMContentLoaded', function () {
       nameCell.appendChild(nameDiv);
       row.appendChild(nameCell);
 
-      // Arrival time
+
       const arrivalCell = document.createElement('td');
       arrivalCell.textContent = process.arrivalTime;
       row.appendChild(arrivalCell);
 
-      // Burst time
+
       const burstCell = document.createElement('td');
       burstCell.textContent = process.burstTime;
       row.appendChild(burstCell);
 
-      // Priority
+
       const priorityCell = document.createElement('td');
       priorityCell.textContent = process.priority;
       row.appendChild(priorityCell);
 
-      // Remaining time with progress bar
+
       const remainingCell = document.createElement('td');
 
       const progressBar = document.createElement('div');
@@ -247,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
       remainingCell.appendChild(progressText);
       row.appendChild(remainingCell);
 
-      // Actions
+
       const actionsCell = document.createElement('td');
       const removeBtn = document.createElement('button');
       removeBtn.classList.add('remove-btn');
@@ -264,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateButtons();
   }
 
-  // Update gantt chart
+
   function updateGanttChart() {
     ganttChartEl.innerHTML = '';
 
@@ -283,13 +298,13 @@ document.addEventListener('DOMContentLoaded', function () {
       ganttItem.style.backgroundColor = item.color;
       ganttItem.style.minWidth = '60px';
 
-      // Process name
+
       const processName = document.createElement('div');
       processName.classList.add('gantt-process-name');
       processName.textContent = item.processName;
       processName.style.color = item.processId === "idle" ? "#000" : getContrastColor(item.color);
 
-      // Time range
+
       const timeRange = document.createElement('div');
       timeRange.classList.add('gantt-time');
       timeRange.textContent = `${item.startTime} - ${item.endTime}`;
@@ -298,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ganttItem.appendChild(processName);
       ganttItem.appendChild(timeRange);
 
-      // Start time marker
+
       const startMarker = document.createElement('div');
       startMarker.classList.add('time-marker');
       startMarker.style.left = '0';
@@ -310,7 +325,6 @@ document.addEventListener('DOMContentLoaded', function () {
       startLabel.style.left = '0';
       ganttItem.appendChild(startLabel);
 
-      // End time marker (only for the last item)
       if (index === ganttChart.length - 1) {
         const endMarker = document.createElement('div');
         endMarker.classList.add('time-marker');
@@ -328,12 +342,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Update current time display
+
   function updateCurrentTime() {
     currentTimeEl.textContent = currentTime;
   }
 
-  // Update current process info
+
   function updateCurrentProcessInfo() {
     currentProcessInfo.innerHTML = '';
 
@@ -350,25 +364,47 @@ document.addEventListener('DOMContentLoaded', function () {
         const quantumDiv = document.createElement('div');
         quantumDiv.style.fontSize = '14px';
         quantumDiv.classList.add('quantum-progress');
-        quantumDiv.textContent = `Quantum Progress: ${quantumProgress + 1}/${timeQuantum}`;
+        quantumDiv.textContent = `Quantum Progress: ${quantumProgress}/${timeQuantum}`;
 
         const quantumBar = document.createElement('div');
         quantumBar.classList.add('quantum-bar');
 
         const quantumFill = document.createElement('div');
         quantumFill.classList.add('quantum-bar-fill');
-        quantumFill.style.width = `${(quantumProgress + 1) / timeQuantum * 100}%`;
+        quantumFill.style.width = `${quantumProgress / timeQuantum * 100}%`;
 
         quantumBar.appendChild(quantumFill);
         quantumDiv.appendChild(quantumBar);
         infoDiv.appendChild(quantumDiv);
       }
 
+      if (algorithm === 'mlfq') {
+        const levelDiv = document.createElement('div');
+        levelDiv.style.fontSize = '14px';
+        levelDiv.classList.add('quantum-progress');
+        const qLabel = mlfqCurrentLevel === 2 ? 'Queue 3 (FCFS)' : `Queue ${mlfqCurrentLevel + 1} (RR)`;
+        const qMax = mlfqCurrentLevel === 0 ? mlfqQ1Quantum : mlfqCurrentLevel === 1 ? mlfqQ2Quantum : '-';
+        levelDiv.textContent = `Level: ${qLabel} | Progress: ${mlfqQuantumProgress}/${qMax}`;
+
+        const quantumBar = document.createElement('div');
+        quantumBar.classList.add('quantum-bar');
+        const quantumFill = document.createElement('div');
+        quantumFill.classList.add('quantum-bar-fill');
+        if (mlfqCurrentLevel < 2) {
+          const max = mlfqCurrentLevel === 0 ? mlfqQ1Quantum : mlfqQ2Quantum;
+          quantumFill.style.width = `${(mlfqQuantumProgress / max) * 100}%`;
+        } else {
+          quantumFill.style.width = '100%';
+        }
+        quantumBar.appendChild(quantumFill);
+        levelDiv.appendChild(quantumBar);
+        infoDiv.appendChild(levelDiv);
+      }
+
       currentProcessInfo.appendChild(infoDiv);
     }
   }
 
-  // Update queue display for Round Robin
   function updateQueueDisplay() {
     queueDisplay.innerHTML = '';
 
@@ -397,9 +433,44 @@ document.addEventListener('DOMContentLoaded', function () {
       queueDiv.appendChild(itemsDiv);
       queueDisplay.appendChild(queueDiv);
     }
+
+    if (algorithm === 'mlfq') {
+      const queueNames = ['Queue 1 (RR, q=' + mlfqQ1Quantum + ')', 'Queue 2 (RR, q=' + mlfqQ2Quantum + ')', 'Queue 3 (FCFS)'];
+      const queueColors = ['rgba(99,102,241,0.15)', 'rgba(139,92,246,0.15)', 'rgba(6,182,212,0.15)'];
+      const borderColors = ['rgba(99,102,241,0.4)', 'rgba(139,92,246,0.4)', 'rgba(6,182,212,0.4)'];
+
+      for (let i = 0; i < 3; i++) {
+        if (mlfqQueues[i].length === 0 && !(currentProcess && currentProcess.mlfqLevel === i)) continue;
+
+        const queueDiv = document.createElement('div');
+        queueDiv.classList.add('queue-display');
+        queueDiv.style.background = queueColors[i];
+        queueDiv.style.borderColor = borderColors[i];
+
+        const titleDiv = document.createElement('div');
+        titleDiv.classList.add('queue-title');
+        titleDiv.textContent = queueNames[i];
+        queueDiv.appendChild(titleDiv);
+
+        const itemsDiv = document.createElement('div');
+        itemsDiv.classList.add('queue-items');
+
+        mlfqQueues[i].forEach(process => {
+          const itemDiv = document.createElement('div');
+          itemDiv.classList.add('queue-item');
+          itemDiv.style.backgroundColor = process.color;
+          itemDiv.style.color = getContrastColor(process.color);
+          itemDiv.textContent = `${process.name} (${process.remainingTime})`;
+          itemsDiv.appendChild(itemDiv);
+        });
+
+        queueDiv.appendChild(itemsDiv);
+        queueDisplay.appendChild(queueDiv);
+      }
+    }
   }
 
-  // Update output table
+
   function updateOutputTable() {
     outputTable.innerHTML = '';
 
@@ -410,11 +481,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     outputCard.style.display = 'block';
 
-    // Process rows
+
     completionInfo.forEach(info => {
       const row = document.createElement('tr');
 
-      // Process name with color
+
       const nameCell = document.createElement('td');
       const nameDiv = document.createElement('div');
       nameDiv.style.display = 'flex';
@@ -430,17 +501,17 @@ document.addEventListener('DOMContentLoaded', function () {
       nameCell.appendChild(nameDiv);
       row.appendChild(nameCell);
 
-      // Completion time
+
       const completionCell = document.createElement('td');
       completionCell.textContent = info.completionTime;
       row.appendChild(completionCell);
 
-      // Turnaround time
+
       const turnaroundCell = document.createElement('td');
       turnaroundCell.textContent = info.turnaroundTime;
       row.appendChild(turnaroundCell);
 
-      // Waiting time
+
       const waitingCell = document.createElement('td');
       waitingCell.textContent = info.waitingTime;
       row.appendChild(waitingCell);
@@ -448,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function () {
       outputTable.appendChild(row);
     });
 
-    // Average row
+
     const averages = calculateAverages();
     const avgRow = document.createElement('tr');
     avgRow.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
@@ -473,7 +544,7 @@ document.addEventListener('DOMContentLoaded', function () {
     outputTable.appendChild(avgRow);
   }
 
-  // Calculate averages
+
   function calculateAverages() {
     if (completionInfo.length === 0) return { avgTurnaround: 0, avgWaiting: 0 };
 
@@ -486,51 +557,51 @@ document.addEventListener('DOMContentLoaded', function () {
     };
   }
 
-  // Get contrast color for text readability
+
   function getContrastColor(hexColor) {
-    // Convert hex to RGB
+
     const r = parseInt(hexColor.substr(1, 2), 16);
     const g = parseInt(hexColor.substr(3, 2), 16);
     const b = parseInt(hexColor.substr(5, 2), 16);
 
-    // Calculate luminance
+
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
-    // Return black or white based on luminance
+
     return luminance > 0.5 ? '#000000' : '#FFFFFF';
   }
 
-  // Run simulation
+
   function runSimulation() {
     if (!isRunning) return;
 
-    // Check if all processes are complete
+
     if (processes.every(p => p.remainingTime === 0)) {
       isRunning = false;
       updateButtons();
       simulationComplete = true;
 
-      // Update output table
+
       updateOutputTable();
       return;
     }
 
-    // Get arrived processes
+
     const arrivedProcesses = processes.filter(p => p.arrivalTime <= currentTime && p.remainingTime > 0);
 
-    // Handle idle time if no processes are available
+
     if (arrivedProcesses.length === 0) {
       currentTime++;
       updateCurrentTime();
 
-      // Add idle time to Gantt chart
+
       const lastItem = ganttChart.length > 0 ? ganttChart[ganttChart.length - 1] : null;
 
       if (lastItem && lastItem.processId === "idle") {
-        // Extend the last idle period
+
         lastItem.endTime = currentTime;
       } else {
-        // Add new idle period
+
         ganttChart.push({
           processId: "idle",
           processName: "Idle",
@@ -542,12 +613,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
       updateGanttChart();
 
-      // Continue simulation after delay
+
       simulationTimer = setTimeout(runSimulation, speed);
       return;
     }
 
-    // Select next process based on scheduling algorithm
+
     let nextProcess;
 
     switch (algorithm) {
@@ -563,100 +634,149 @@ document.addEventListener('DOMContentLoaded', function () {
       case 'rr':
         nextProcess = handleRoundRobin(arrivedProcesses);
         break;
+      case 'mlfq':
+        nextProcess = handleMLFQ(arrivedProcesses);
+        break;
       default:
         nextProcess = handleFCFS(arrivedProcesses);
     }
 
-    // Execute the selected process
+
     if (nextProcess) {
       executeProcess(nextProcess);
     }
 
-    // Continue simulation after delay
+
     simulationTimer = setTimeout(runSimulation, speed);
   }
 
-  // First Come First Served (FCFS) scheduling
+
   function handleFCFS(arrivedProcesses) {
     if (currentProcess && currentProcess.remainingTime > 0) {
       return currentProcess;
     }
 
-    // Sort by arrival time
+
     return arrivedProcesses.sort((a, b) => a.arrivalTime - b.arrivalTime)[0];
   }
 
-  // Shortest Job First (SJF) scheduling
+
   function handleSJF(arrivedProcesses, isPreemptive) {
-    // Non-preemptive - continue current process if exists
+
     if (!isPreemptive && currentProcess && currentProcess.remainingTime > 0) {
       return currentProcess;
     }
 
-    // Sort by remaining time
+
     return arrivedProcesses.sort((a, b) => a.remainingTime - b.remainingTime)[0];
   }
 
-  // Priority scheduling
+
   function handlePriority(arrivedProcesses, isPreemptive) {
-    // Non-preemptive - continue current process if exists
+
     if (!isPreemptive && currentProcess && currentProcess.remainingTime > 0) {
       return currentProcess;
     }
 
-    // Sort by priority (lower value = higher priority)
+
     return arrivedProcesses.sort((a, b) => a.priority - b.priority)[0];
   }
 
-  // Round Robin scheduling
-  // Round Robin scheduling
+
   function handleRoundRobin(arrivedProcesses) {
-    // First, check for newly arrived processes and add them to the queue
+
     arrivedProcesses.forEach(p => {
-      // Only add if not already in queue and not the current process
       if (!queue.includes(p) && p !== currentProcess && p.remainingTime > 0) {
         queue.push(p);
       }
     });
 
-    // If we don't have a current process or the quantum is complete or current process is done
+
     if (!currentProcess || quantumProgress >= timeQuantum || currentProcess.remainingTime === 0) {
-      // Reset quantum progress
+
       quantumProgress = 0;
 
-      // If current process isn't finished, add it back to the queue
+
       if (currentProcess && currentProcess.remainingTime > 0) {
         queue.push(currentProcess);
       }
 
-      // Get next process from queue
       const nextProcess = queue.shift();
 
-      // Update queue display
       updateQueueDisplay();
 
       return nextProcess;
     } else {
-      // Continue with current process and increment quantum progress
       quantumProgress++;
       updateQueueDisplay();
       return currentProcess;
     }
   }
-  // Execute process
+
+  function handleMLFQ(arrivedProcesses) {
+    arrivedProcesses.forEach(p => {
+      if (p.mlfqLevel === undefined) p.mlfqLevel = 0;
+      const inAnyQueue = mlfqQueues.some(q => q.includes(p));
+      if (!inAnyQueue && p !== currentProcess && p.remainingTime > 0) {
+        mlfqQueues[p.mlfqLevel].push(p);
+      }
+    });
+
+    if (currentProcess && currentProcess.remainingTime > 0) {
+      const level = mlfqCurrentLevel;
+
+      const higherQueueHasProcess = mlfqQueues.slice(0, level).some(q => q.length > 0);
+      if (higherQueueHasProcess) {
+        mlfqQueues[level].unshift(currentProcess);
+        currentProcess = null;
+        mlfqQuantumProgress = 0;
+      } else if (level < 2) {
+        const quantum = level === 0 ? mlfqQ1Quantum : mlfqQ2Quantum;
+        mlfqQuantumProgress++;
+
+        if (mlfqQuantumProgress >= quantum) {
+          mlfqQuantumProgress = 0;
+          const newLevel = Math.min(level + 1, 2);
+          currentProcess.mlfqLevel = newLevel;
+          mlfqQueues[newLevel].push(currentProcess);
+          currentProcess = null;
+        } else {
+          updateQueueDisplay();
+          return currentProcess;
+        }
+      } else {
+        updateQueueDisplay();
+        return currentProcess;
+      }
+    }
+
+    for (let i = 0; i < 3; i++) {
+      if (mlfqQueues[i].length > 0) {
+        const next = mlfqQueues[i].shift();
+        mlfqCurrentLevel = i;
+        mlfqQuantumProgress = 0;
+        updateQueueDisplay();
+        return next;
+      }
+    }
+
+    updateQueueDisplay();
+    return null;
+  }
+
   function executeProcess(process) {
     if (!process) return;
 
-    // Check if this is a new process or a continuation
+
     if (currentProcess !== process) {
-      // Update gantt chart
+
       const lastItem = ganttChart.length > 0 ? ganttChart[ganttChart.length - 1] : null;
 
       if (lastItem && lastItem.processId === process.id) {
-        // Extend the last process period
+
         lastItem.endTime = currentTime + 1;
       } else {
-        // Add new process period
+
         ganttChart.push({
           processId: process.id,
           processName: process.name,
@@ -666,26 +786,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
       }
     } else {
-      // Extend the last gantt chart item
+
       const lastItem = ganttChart[ganttChart.length - 1];
       lastItem.endTime = currentTime + 1;
     }
 
-    // Set current process
+
     currentProcess = process;
 
-    // Execute one time unit
+
     process.remainingTime--;
     currentTime++;
 
-    // Check if process completed
+
     if (process.remainingTime === 0) {
-      // Calculate process stats
+
       const completionTime = currentTime;
       const turnaroundTime = completionTime - process.arrivalTime;
       const waitingTime = turnaroundTime - process.burstTime;
 
-      // Add to completion info
       completionInfo.push({
         id: process.id,
         name: process.name,
@@ -694,23 +813,27 @@ document.addEventListener('DOMContentLoaded', function () {
         waitingTime: waitingTime
       });
 
-      // Remove from current process
-      if (algorithm !== 'rr') {
+
+      if (algorithm !== 'rr' && algorithm !== 'mlfq') {
         currentProcess = null;
+      }
+      if (algorithm === 'mlfq') {
+        currentProcess = null;
+        mlfqQuantumProgress = 0;
       }
     }
 
-    // Update UI
+
     updateCurrentTime();
     updateProcessesTable();
     updateGanttChart();
     updateCurrentProcessInfo();
   }
 
-  // Initialize the simulation
+
   updateProcessesTable();
   updateGanttChart();
 
-  // Trigger change event to set initial UI state based on select default
+
   algorithmSelect.dispatchEvent(new Event('change'));
 });

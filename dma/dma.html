@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMA Transfer Simulator — OSEmulator</title>
+  <meta name="description" content="Interactive simulation comparing DMA (Direct Memory Access) vs Programmed I/O data transfer, visualizing interrupt frequency and CPU utilization.">
+  <link rel="stylesheet" href="dma.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <canvas id="vortex-canvas"></canvas>
+
+  <header class="ps-header">
+    <nav class="ps-nav">
+      <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+      <ul class="ps-nav-links">
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="#theory">Theory</a></li>
+        <li><a href="#simulator" class="ps-nav-cta">Simulator</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div style="height:80px"></div>
+
+  <div class="container">
+    <div style="margin:0 0 20px 0;">
+      <a href="../index.html" class="back-link">
+        <span style="font-size:16px;">⬅</span>
+        <span>Back to Home</span>
+      </a>
+    </div>
+
+    <h1>Direct Memory Access (DMA) Simulator</h1>
+
+    <section id="theory">
+      <div class="card" style="margin-bottom:24px;">
+        <h2><i class="fas fa-book" style="color:var(--indigo);margin-right:8px;"></i>How DMA Works</h2>
+        <p style="margin-bottom:12px;">In traditional <strong style="color:var(--rose);">Programmed I/O (PIO)</strong>, the CPU handles every single byte of data transfer between devices and memory. Each byte transferred generates an <strong>interrupt</strong>, overwhelming the CPU with overhead and leaving it unavailable for other work.</p>
+        <p style="margin-bottom:12px;">With <strong style="color:var(--cyan);">Direct Memory Access (DMA)</strong>, the DMA controller takes over the transfer. After the CPU sets up buffers, pointers, and counters, the DMA controller transfers an <strong>entire block</strong> of data directly between the device and main memory — with <strong>no CPU intervention</strong>. Only <strong>one interrupt per block</strong> is generated to signal completion.</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+          <div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.2);border-radius:var(--r);padding:14px;">
+            <h3 style="color:var(--rose);margin:0 0 8px;">Without DMA (PIO)</h3>
+            <ul style="padding-left:16px;">
+              <li>CPU manages every byte transfer</li>
+              <li><strong>1 interrupt per byte</strong> of data</li>
+              <li>CPU is fully occupied during transfer</li>
+              <li>High interrupt overhead</li>
+            </ul>
+          </div>
+          <div style="background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);border-radius:var(--r);padding:14px;">
+            <h3 style="color:var(--cyan);margin:0 0 8px;">With DMA</h3>
+            <ul style="padding-left:16px;">
+              <li>DMA controller handles block transfer</li>
+              <li><strong>1 interrupt per block</strong> of data</li>
+              <li>CPU is free for other work</li>
+              <li>Minimal interrupt overhead</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="simulator">
+      <div class="app-layout">
+        <div class="sidebar">
+          <div class="card">
+            <h2><i class="fas fa-sliders-h" style="color:var(--indigo);margin-right:8px;"></i>Transfer Settings</h2>
+
+            <div style="margin-bottom:14px;">
+              <label for="data-size">Total Data Size (bytes)</label>
+              <input type="number" id="data-size" min="4" max="64" value="16">
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <label for="block-size">DMA Block Size (bytes/block)</label>
+              <input type="number" id="block-size" min="2" max="16" value="4">
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <label for="sim-speed">Simulation Speed</label>
+              <input type="range" id="sim-speed" min="50" max="800" step="50" value="300">
+              <div class="range-value" id="speed-label">300ms</div>
+            </div>
+
+            <div class="button-group" style="margin-top:16px;">
+              <button id="btn-start" class="button-green"><i class="fas fa-play"></i> Start</button>
+              <button id="btn-stop" class="button-red" disabled><i class="fas fa-stop"></i> Stop</button>
+              <button id="btn-reset" class="button-gray"><i class="fas fa-redo"></i> Reset</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2><i class="fas fa-chart-bar" style="color:var(--indigo);margin-right:8px;"></i>Live Statistics</h2>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">DMA Interrupts</div>
+                <div class="stat-value cyan" id="stat-dma-int">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">PIO Interrupts</div>
+                <div class="stat-value rose" id="stat-pio-int">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Bytes Sent (DMA)</div>
+                <div class="stat-value cyan" id="stat-dma-bytes">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Bytes Sent (PIO)</div>
+                <div class="stat-value rose" id="stat-pio-bytes">0</div>
+              </div>
+            </div>
+
+            <h3 style="margin-top:16px;">Interrupt Comparison</h3>
+            <div class="compare-row">
+              <div class="compare-label">DMA</div>
+              <div class="compare-bar-wrap">
+                <div class="compare-bar dma-bar" id="bar-dma" style="width:0%;">0</div>
+              </div>
+            </div>
+            <div class="compare-row">
+              <div class="compare-label">PIO</div>
+              <div class="compare-bar-wrap">
+                <div class="compare-bar pio-bar" id="bar-pio" style="width:0%;">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="main-content">
+          <div class="card">
+            <div class="mode-tabs">
+              <button class="mode-tab active" id="tab-side-by-side" onclick="setViewMode('sideBySide')">Side-by-Side</button>
+              <button class="mode-tab" id="tab-dma-only" onclick="setViewMode('dmaOnly')">DMA Only</button>
+              <button class="mode-tab" id="tab-pio-only" onclick="setViewMode('pioOnly')">PIO Only</button>
+            </div>
+
+            <div id="view-dma" style="margin-bottom:24px;">
+              <h2 style="text-align:center;">DMA Transfer</h2>
+              <div class="arch-diagram" id="arch-dma">
+                <div class="arch-box" id="dma-device">
+                  <div class="arch-label">Device</div>
+                  <div class="arch-value"><i class="fas fa-hdd"></i></div>
+                  <div class="arch-sub" id="dma-device-status">Idle</div>
+                </div>
+                <div class="arch-arrow">
+                  <div class="arch-arrow-label">data</div>
+                  <div class="arch-arrow-line" id="arrow-dev-dma"></div>
+                </div>
+                <div class="arch-box" id="dma-controller-box">
+                  <div class="arch-label">DMA Controller</div>
+                  <div class="arch-value"><i class="fas fa-microchip"></i></div>
+                  <div class="arch-sub" id="dma-ctrl-status">Idle</div>
+                </div>
+                <div class="arch-arrow">
+                  <div class="arch-arrow-label">block xfer</div>
+                  <div class="arch-arrow-line" id="arrow-dma-mem"></div>
+                </div>
+                <div class="arch-box" id="dma-memory">
+                  <div class="arch-label">Memory</div>
+                  <div class="arch-value"><i class="fas fa-memory"></i></div>
+                  <div class="arch-sub" id="dma-mem-status">0 / 0 bytes</div>
+                </div>
+                <div class="arch-arrow">
+                  <div class="arch-arrow-label">interrupt</div>
+                  <div class="arch-arrow-line" id="arrow-dma-cpu"></div>
+                </div>
+                <div class="arch-box" id="dma-cpu">
+                  <div class="arch-label">CPU</div>
+                  <div class="arch-value"><i class="fas fa-server"></i></div>
+                  <div class="cpu-status">
+                    <div class="cpu-dot free" id="dma-cpu-dot"></div>
+                    <span class="cpu-status-text" id="dma-cpu-text">Free</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="view-pio">
+              <h2 style="text-align:center;">Programmed I/O (No DMA)</h2>
+              <div class="arch-diagram" id="arch-pio">
+                <div class="arch-box" id="pio-device">
+                  <div class="arch-label">Device</div>
+                  <div class="arch-value"><i class="fas fa-hdd"></i></div>
+                  <div class="arch-sub" id="pio-device-status">Idle</div>
+                </div>
+                <div class="arch-arrow">
+                  <div class="arch-arrow-label">byte</div>
+                  <div class="arch-arrow-line" id="arrow-pio-dev-cpu"></div>
+                </div>
+                <div class="arch-box" id="pio-cpu">
+                  <div class="arch-label">CPU</div>
+                  <div class="arch-value"><i class="fas fa-server"></i></div>
+                  <div class="cpu-status">
+                    <div class="cpu-dot free" id="pio-cpu-dot"></div>
+                    <span class="cpu-status-text" id="pio-cpu-text">Free</span>
+                  </div>
+                </div>
+                <div class="arch-arrow">
+                  <div class="arch-arrow-label">byte</div>
+                  <div class="arch-arrow-line" id="arrow-pio-cpu-mem"></div>
+                </div>
+                <div class="arch-box" id="pio-memory">
+                  <div class="arch-label">Memory</div>
+                  <div class="arch-value"><i class="fas fa-memory"></i></div>
+                  <div class="arch-sub" id="pio-mem-status">0 / 0 bytes</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2><i class="fas fa-terminal" style="color:var(--indigo);margin-right:8px;"></i>Interrupt Log</h2>
+            <div class="interrupt-log" id="interrupt-log">
+              <div class="log-entry info-log">Waiting to start simulation…</div>
+            </div>
+          </div>
+
+          <div class="card" id="results-card" style="display:none;">
+            <h2><i class="fas fa-trophy" style="color:var(--orange);margin-right:8px;"></i>Transfer Complete — Results</h2>
+            <div class="stats-grid" id="final-stats"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="ps-footer">
+    <div class="ps-foot-inner">
+      <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+      <p>&copy; 2025 OS Emulator Project. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="dma.js"></script>
+
+  <script>
+    (function(){
+      const cvs=document.getElementById('vortex-canvas');
+      if(!cvs)return;
+      const ctx=cvs.getContext('2d');
+      let W=0,H=0,pts=[];
+      const HUES=[{h:240,spread:25},{h:262,spread:22},{h:192,spread:18}];
+      function mH(){return Math.min(W,H)*0.5}
+      class P{
+        constructor(b){
+          const d=HUES[Math.floor(Math.random()*HUES.length)];
+          this.hue=d.h+(Math.random()-0.5)*d.spread;
+          this.sat=70+Math.random()*20;this.lit=55+Math.random()*25;
+          this.angle=Math.random()*Math.PI*2;
+          this.r=b?Math.random()*mH():1;
+          this.va=0.0018+Math.random()*0.004;
+          this.vr=(Math.random()>0.5?1:-1)*(0.25+Math.random()*0.55);
+          this.size=0.4+Math.random()*1.5;this.life=0;
+          this.maxLife=110+Math.random()*210;
+        }
+        step(){this.angle+=this.va;this.r+=this.vr*0.38;this.life+=1;if(this.r<1||this.r>mH()||this.life>this.maxLife)Object.assign(this,new P(false))}
+        paint(){const t=this.life/this.maxLife;const a=t<0.12?t/0.12:t>0.8?(1-t)/0.2:1;const x=W/2+Math.cos(this.angle)*this.r;const y=H/2+Math.sin(this.angle)*this.r;ctx.beginPath();ctx.arc(x,y,this.size,0,Math.PI*2);ctx.fillStyle=`hsla(${this.hue},${this.sat}%,${this.lit}%,${(a*0.65).toFixed(2)})`;ctx.fill()}
+      }
+      function resize(){W=cvs.width=window.innerWidth;H=cvs.height=window.innerHeight}
+      function init(){pts=Array.from({length:400},()=>new P(true))}
+      function draw(){ctx.fillStyle='rgba(6,6,8,0.17)';ctx.fillRect(0,0,W,H);const g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,mH()*0.55);g.addColorStop(0,'rgba(99,102,241,0.05)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);pts.forEach(p=>{p.step();p.paint()});requestAnimationFrame(draw)}
+      window.addEventListener('resize',()=>{resize();init()});
+      resize();init();draw();
+      window.addEventListener('scroll',function(){
+        const hdr=document.querySelector('.ps-header');
+        if(hdr)hdr.classList.toggle('scrolled',window.scrollY>60);
+      },{passive:true});
+    }());
+  </script>
+</body>
+</html>
