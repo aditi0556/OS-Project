@@ -176,11 +176,11 @@
       isNew: true
     },
     {
-      title: 'Interrupts',
-      desc: 'Interrupt handling and CPU response simulation',
+      title: 'Clock Algorithm',
+      desc: 'Clock Algorithm Simulator',
       by: 'A.D.L.Nikhileswar',
       icon: 'fas fa-bell',
-      href: 'interrupts/interrupt.html',
+      href: 'clock_algo/time.html',
       bg: 'linear-gradient(155deg,#140000 0%,#3a0000 50%,#700000 100%)',
       isNew: true
     }
