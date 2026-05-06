@@ -27,9 +27,9 @@
   </div>
 
   <div class="sync-tabs" id="tabContainer">
-    <button class="tab-btn active" data-tab="producer">🐝 Producer‑Consumer</button>
-    <button class="tab-btn" data-tab="reader">📖 Readers‑Writers</button>
-    <button class="tab-btn" data-tab="dinner">🍽️ Dining Philosophers</button>
+    <button class="tab-btn active" data-tab="producer">Producer‑Consumer</button>
+    <button class="tab-btn" data-tab="reader">Readers‑Writers</button>
+    <button class="tab-btn" data-tab="dinner">Dining Philosophers</button>
   </div>
 
   <!-- Producer‑Consumer Pane -->
@@ -38,8 +38,8 @@
       <h3><i class="fas fa-boxes"></i> Buffer & Agents</h3>
       <div id="pc-buffer" class="buffer-row"></div>
       <div class="agents-grid">
-        <div><strong>👨‍🏭 Producers</strong> <div id="pc-producers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div></div>
-        <div><strong>🛒 Consumers</strong> <div id="pc-consumers-list" style="display: flex; gap: 8px; flex-wrap: wrap;"></div></div>
+        <div><strong>Producers</strong> <div id="pc-producers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div></div>
+        <div><strong>Consumers</strong> <div id="pc-consumers-list" style="display: flex; gap: 8px; flex-wrap: wrap;"></div></div>
       </div>
       <div class="metrics-row">
         <div class="metric"><div class="metric-value" id="pc-prod-count">0</div><div>Produced</div></div>
@@ -77,8 +77,8 @@
         <div id="rw-writer-status">Writer active: No</div>
       </div>
       <div class="agents-grid">
-        <div><strong>📖 Readers</strong><div id="rw-readers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div></div>
-        <div><strong>✍️ Writers</strong><div id="rw-writers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div></div>
+        <div><strong>Readers</strong><div id="rw-readers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div></div>
+        <div><strong>Writers</strong><div id="rw-writers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div></div>
       </div>
       <div class="metrics-row">
         <div class="metric"><div class="metric-value" id="rw-total-reads">0</div><div>Read ops</div></div>
@@ -98,7 +98,7 @@
         <button id="rw-start-btn" class="btn-success">Start</button>
         <button id="rw-stop-btn" class="btn-danger" disabled>Stop</button>
         <button id="rw-reset-btn" class="btn-outline">Reset</button>
-        <button id="rw-preset-reader" class="btn-outline">📚 Reader‑heavy</button>
+        <button id="rw-preset-reader" class="btn-outline">Reader‑heavy</button>
       </div>
     </div>
     <div class="glass-card"><h4>📋 Log</h4><div id="rw-log" class="log-box"></div></div>
@@ -111,7 +111,7 @@
       <div id="dp-status-list" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 20px 0;"></div>
       <div class="metrics-row">
         <div class="metric"><div class="metric-value" id="dp-meals">0</div><div>Total meals</div></div>
-        <div class="metric"><div class="metric-value" id="dp-deadlock">✅ No</div><div>Deadlock</div></div>
+        <div class="metric"><div class="metric-value" id="dp-deadlock">No</div><div>Deadlock</div></div>
       </div>
     </div>
     <div class="glass-card">
@@ -125,7 +125,7 @@
         <button id="dp-start-btn" class="btn-success">Start</button>
         <button id="dp-stop-btn" class="btn-danger" disabled>Stop</button>
         <button id="dp-reset-btn" class="btn-outline">Reset</button>
-        <button id="dp-preset-deadlock" class="btn-outline">⚠️ Deadlock‑prone</button>
+        <button id="dp-preset-deadlock" class="btn-outline">Deadlock‑prone</button>
       </div>
     </div>
     <div class="glass-card"><h4>📋 Log</h4><div id="dp-log" class="log-box"></div></div>
