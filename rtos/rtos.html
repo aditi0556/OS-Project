@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RTOS Scheduling — OS Emulator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="rtos.css">
+</head>
+<body>
+
+  <header>
+    <nav>
+      <a href="../index.html" class="logo">OS<span>Emulator</span></a>
+      <ul class="navigation">
+        <li><a href="../index.html#topics">← All Modules</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <section class="page-hero">
+      <div class="wrap">
+        <div class="hero-eyebrow"><span class="hero-dot"></span>Real-Time Operating Systems</div>
+        <h1>RTOS Scheduling <span class="h1-grad">Algorithms</span></h1>
+        <p class="hero-sub">Simulate EDF Add periodic tasks, set deadlines, and watch the Gantt chart build in real time.</p>
+      </div>
+    </section>
+    <section class="sim-section">
+      <div class="wrap">
+        <div class="sim-layout">
+          <!-- LEFT PANEL -->
+          <aside class="sim-panel">
+            <div class="panel-block">
+              <p class="panel-label">Algorithm</p>
+              <div class="algo-selector" id="algoSelector"></div>
+            </div>
+            <div class="panel-block">
+              <p class="panel-label">Tasks</p>
+              <table class="task-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Period</th>
+                    <th>WCET</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="taskTableBody"></tbody>
+              </table>
+              <button type="button" id="addTaskBtn" class="btn-add">
+                <i class="fas fa-plus"></i> Add Task
+              </button>
+            </div>
+
+            <div class="panel-block">
+              <p class="panel-label">Simulation</p>
+              <div class="field-row">
+                <div class="field">
+                  <label for="totalTime">Total Time</label>
+                  <input type="number" id="totalTime" min="4" max="100" value="24">
+                </div>
+                <div class="field">
+                  <label for="speed">Speed</label>
+                  <select id="speed">
+                    <option value="1200">Slow</option>
+                    <option value="600" selected>Medium</option>
+                    <option value="200">Fast</option>
+                  </select>
+                </div>
+              </div>
+              <div class="ctrl-actions">
+                <button type="button" id="runBtn"   class="btn-primary"><i class="fas fa-play"></i> Run</button>
+                <button type="button" id="stepBtn"  class="btn-ghost"><i class="fas fa-forward-step"></i> Step</button>
+                <button type="button" id="resetBtn" class="btn-ghost"><i class="fas fa-rotate-left"></i> Reset</button>
+              </div>
+            </div>
+
+            <div class="panel-block">
+              <p class="panel-label">Statistics</p>
+              <div class="stat-grid">
+                <div class="stat-item">
+                  <span class="stat-val" id="statTime">0</span>
+                  <span class="stat-key">Current t</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-val" id="statTotal">0</span>
+                  <span class="stat-key">Total Time</span>
+                </div>
+                <div class="stat-item stat-item--hit">
+                  <span class="stat-val" id="statBusy">0</span>
+                  <span class="stat-key">CPU Busy</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-val" id="statIdle">0</span>
+                  <span class="stat-key">CPU Idle</span>
+                </div>
+                <div class="stat-item stat-item--fault">
+                  <span class="stat-val" id="statMissed">0</span>
+                  <span class="stat-key">Deadlines Missed</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-val" id="statTasks">0</span>
+                  <span class="stat-key">Tasks</span>
+                </div>
+              </div>
+            </div>
+
+          </aside>
+
+          <!-- RIGHT MAIN -->
+          <div class="sim-main">
+            <div class="sim-algo-header">
+              <div class="sim-algo-icon">
+                <i id="algoIcon" class="fas fa-hourglass-half"></i>
+              </div>
+              <div>
+                <h2 id="algoTitle">EDF</h2>
+                <p id="algoSub">Earliest Deadline First</p>
+              </div>
+              <div class="step-badge step-badge--idle" id="stepBadge">Ready</div>
+            </div>
+            <!-- Utilization -->
+            <div class="vis-block">
+              <div class="util-header">
+                <p class="vis-label">CPU Utilization</p>
+                <span class="util-pct" id="utilLabel">0%</span>
+              </div>
+              <div class="util-bar-track">
+                <div class="util-bar-fill" id="utilBar" style="width:0%"></div>
+              </div>
+              <p class="util-note" id="utilNote">Run simulation to see utilization</p>
+            </div>
+            <div class="vis-block">
+              <p class="vis-label">Gantt Chart</p>
+              <div class="gantt-container" id="ganttChart">
+                <p class="vis-empty">Press Run or Step to start</p>
+              </div>
+              <div class="gantt-legend">
+                <span class="legend-item"><span class="legend-box legend-run"></span>Running</span>
+                <span class="legend-item"><span class="legend-box legend-idle"></span>Idle</span>
+                <span class="legend-item"><span class="legend-box legend-dead"></span>Deadline ▼</span>
+              </div>
+            </div>
+            <div class="vis-block">
+              <p class="vis-label">Ready Queue at current tick</p>
+              <div class="ready-queue" id="readyQueue">
+                <p class="vis-empty">Start simulation to see ready queue</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <div class="wrap">
+      <div class="foot-inner">
+        <div class="logo">OS<span>Emulator</span></div>
+        <p>&copy; 2026 OS Emulator Project. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="rtos_algorithms.js"></script>
+  <script src="rtos.js"></script>
+</body>
+</html>
