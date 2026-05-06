@@ -111,7 +111,7 @@
     {
       title: 'Memory Management',
       desc: 'Paging, segmentation and virtual memory techniques',
-      by: '',
+      by: 'Ankit Kumar Saran',
       icon: 'fas fa-shield-alt',
       href: 'memory-management/memory-management.html',
       bg: 'linear-gradient(155deg,#001a1a 0%,#003d4a 50%,#005f73 100%)'
