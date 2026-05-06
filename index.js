@@ -212,7 +212,7 @@
 
           <div class="hero-actions">
             <a href="#topics" class="btn-primary">Browse Modules</a>
-            <a href="#team"   class="btn-ghost">Meet the Team</a>
+            <a href="team.html"   class="btn-ghost">Meet the Team</a>
           </div>
 
           <div class="hero-stats">
