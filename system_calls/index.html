@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS System Calls Emulator</title>
+    <style>
+@import url('[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap)');
+
+:root {
+  --bg: #060608;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface2: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.08);
+  --border2: rgba(255, 255, 255, 0.14);
+  --indigo: #6366f1;
+  --cyan: #06b6d4;
+  --green: #22c55e;
+  --red: #ef4444;
+  --text: #ededf0;
+  --muted: rgba(237, 237, 240, 0.58);
+  --subtle: rgba(237, 237, 240, 0.28);
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --radius: 14px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Header */
+.header {
+  background: rgba(6, 6, 8, 0.85);
+  backdrop-filter: blur(18px) saturate(140%);
+  border-bottom: 1px solid var(--border2);
+  text-align: center;
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  background: linear-gradient(120deg, var(--indigo), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Layout */
+.container {
+  display: flex;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+  padding: 14px;
+  gap: 16px;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  overflow-y: auto;
+  height: calc(100vh - 100px);
+}
+.sidebar h2 {
+  font-size: 1rem;
+  color: var(--indigo);
+  margin-bottom: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.system-call-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  transition: background .25s, border-color .25s, transform .2s;
+  cursor: pointer;
+}
+.system-call-item:hover {
+  background: var(--surface2);
+  border-color: var(--border2);
+  transform: translateY(-2px);
+}
+.system-call-name {
+  font-weight: 600;
+  color: var(--indigo);
+  margin-bottom: 4px;
+}
+.system-call-desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Animation area */
+.animation-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  height: 140px;
+  position: relative;
+  overflow: hidden;
+}
+.user, .kernel {
+  position: absolute;
+  width: 100%;
+  height: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+}
+.user {
+  top: 0;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.kernel {
+  bottom: 0;
+  background: rgba(99, 102, 241, 0.14);
+  color: #a5b4fc;
+}
+.transition {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: var(--indigo);
+  border-radius: 50%;
+  left: 50%;
+  top: 25%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: all 0.6s ease;
+}
+
+/* Process Table */
+.process-table {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.process-table h2 {
+  color: var(--indigo);
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border2);
+}
+th {
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Terminal */
+.terminal {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 15px;
+  font-family: 'Courier New', monospace;
+  overflow-y: auto;
+}
+.terminal-output {
+  color: var(--text);
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 0.85rem;
+}
+.terminal-input {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+}
+.prompt {
+  color: var(--green);
+  margin-right: 10px;
+}
+.command-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+/* Memory map */
+.memory-view {
+  margin-top: 22px;
+}
+.memory-view h2 {
+  font-size: 0.95rem;
+  color: var(--cyan);
+  margin-bottom: 10px;
+}
+.memory-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.memory-cell {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  position: relative;
+  color: var(--muted);
+  transition: transform .2s ease, background .2s;
+}
+.memory-cell.used {
+  background: var(--indigo);
+  color: #fff;
+}
+.memory-cell.kernel {
+  background: var(--cyan);
+  color: #020617;
+}
+.memory-cell:hover {
+  transform: scale(1.2);
+  z-index: 5;
+}
+.tooltip {
+  position: absolute;
+  background: var(--surface2);
+  color: var(--text);
+  padding: 4px 6px;
+  font-size: 0.7rem;
+  border-radius: 5px;
+  white-space: nowrap;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+}
+.memory-cell:hover .tooltip {
+  display: block;
+}
+
+/* States */
+.success {
+  color: var(--green);
+}
+.error {
+  color: var(--red);
+}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OS System Calls Emulator</h1>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <h2>System Calls</h2>
+            <div class="system-call-item" data-call="open">
+                <div class="system-call-name">open()</div>
+                <div class="system-call-desc">Open a file and return a file descriptor</div>
+            </div>
+            <div class="system-call-item" data-call="read">
+                <div class="system-call-name">read()</div>
+                <div class="system-call-desc">Read data from a file descriptor</div>
+            </div>
+            <div class="system-call-item" data-call="write">
+                <div class="system-call-name">write()</div>
+                <div class="system-call-desc">Write data to a file descriptor</div>
+            </div>
+            <div class="system-call-item" data-call="close">
+                <div class="system-call-name">close()</div>
+                <div class="system-call-desc">Close a file descriptor</div>
+            </div>
+            <div class="system-call-item" data-call="fork">
+                <div class="system-call-name">fork()</div>
+                <div class="system-call-desc">Create a new process</div>
+            </div>
+            <div class="system-call-item" data-call="exec">
+                <div class="system-call-name">exec()</div>
+                <div class="system-call-desc">Replace process image</div>
+            </div>
+            <div class="system-call-item" data-call="exit">
+                <div class="system-call-name">exit()</div>
+                <div class="system-call-desc">Terminate the calling process</div>
+            </div>
+            <div class="system-call-item" data-call="malloc">
+                <div class="system-call-name">malloc()</div>
+                <div class="system-call-desc">Allocate memory</div>
+            </div>
+            <div class="system-call-item" data-call="free">
+                <div class="system-call-name">free()</div>
+                <div class="system-call-desc">Free allocated memory</div>
+            </div>
+            <div class="system-call-item" data-call="switch">
+                <div class="system-call-name">switch()</div>
+                <div class="system-call-desc">Switch to another process</div>
+            </div>
+            
+            
+            <div class="memory-view">
+                <h2>Memory Map</h2>
+                <div class="memory-block" id="memory-block">
+                    <!-- Memory cells will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="animation-area">
+                <div class="user">User Space</div>
+                <div class="kernel">Kernel Space</div>
+                <div class="transition" id="transition-ball"></div>
+            </div>
+            
+            <div class="process-table">
+                <h2>Process Table</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>PID</th>
+                            <th>Process Name</th>
+                            <th>State</th>
+                            <th>Open Files</th>
+                            <th>Memory Used</th>
+                        </tr>
+                    </thead>
+                    <tbody id="process-table-body">
+                        <tr>
+                            <td>1</td>
+                            <td>init</td>
+                            <td>Running</td>
+                            <td>3</td>
+                            <td>1.2 MB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="terminal">
+                <div id="terminal-output" class="terminal-output">
+Welcome to OS System Calls Emulator!
+This is a mini-project to demonstrate how system calls work in an operating system.
+Type 'help' to see available commands or click on system calls in the sidebar.
+                </div>
+                <div class="terminal-input">
+                    <span class="prompt">user@system:~$</span>
+                    <input type="text" id="command-input" class="command-input" autofocus>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // System state
+        const state = {
+            processes: [
+                { pid: 1, name: 'init', state: 'Running', openFiles: 3, memoryUsed: '1.2 MB', memoryBlocks: [1, 2, 3, 4] }
+            ],
+            files: {
+                '/etc/hosts': 'localhost 127.0.0.1\n::1 localhost ip6-localhost',
+                '/etc/passwd': 'root:x:0:0:root:/root:/bin/bash\nuser:x:1000:1000:User:/home/user:/bin/bash',
+                '/home/user/notes.txt': 'This is a sample text file.\nIt contains some lines of text.\nSystem calls can read and write to this file.'
+            },
+            openFileDescriptors: {
+                0: { name: 'stdin', mode: 'r' },
+                1: { name: 'stdout', mode: 'w' },
+                2: { name: 'stderr', mode: 'w' }
+            },
+            nextFd: 3,
+            nextPid: 2,
+            currentPid: 1,
+            memory: Array(64).fill(null).map((_, i) => {
+                if (i < 16) {
+                    return { status: 'kernel', owner: 'Kernel', data: 'Kernel data' };
+                } else {
+                    return { status: 'free', owner: null, data: null };
+                }
+            }),
+            allocatedMemory: {}
+        };
+
+        // Initialize elements
+        const terminalOutput = document.getElementById('terminal-output');
+        const commandInput = document.getElementById('command-input');
+        const processTableBody = document.getElementById('process-table-body');
+        const transitionBall = document.getElementById('transition-ball');
+        const memoryBlock = document.getElementById('memory-block');
+
+        // Initialize memory visualization
+        function initMemory() {
+            memoryBlock.innerHTML = '';
+            state.memory.forEach((cell, index) => {
+                const memoryCell = document.createElement('div');
+                memoryCell.className = `memory-cell ${cell.status !== 'free' ? cell.status : ''}`;
+                memoryCell.textContent = index;
+                
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = cell.status === 'free' ? 'Free memory' : `${cell.owner}: ${cell.data}`;
+                
+                memoryCell.appendChild(tooltip);
+                memoryBlock.appendChild(memoryCell);
+            });
+        }
+
+        // Update process table
+        function updateProcessTable() {
+            processTableBody.innerHTML = '';
+            state.processes.forEach(process => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${process.pid}</td>
+                    <td>${process.name}</td>
+                    <td>${process.state}</td>
+                    <td>${process.openFiles}</td>
+                    <td>${process.memoryUsed}</td>
+                `;
+                processTableBody.appendChild(row);
+            });
+        }
+
+        // Add message to terminal
+        function addToTerminal(message, className = '') {
+            const messageElement = document.createElement('div');
+            messageElement.className = className;
+            messageElement.textContent = message;
+            terminalOutput.appendChild(messageElement);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        // Animate system call
+        function animateSystemCall(callback) {
+            // Reset animation
+            transitionBall.style.top = '25%';
+            transitionBall.style.opacity = '1';
+            
+            // Animate ball going down to kernel
+            setTimeout(() => {
+                transitionBall.style.top = '75%';
+                transitionBall.style.backgroundColor = '#569cd6';
+            }, 100);
+            
+            // Show result and animate ball going back up
+            setTimeout(() => {
+                if (callback) callback();
+                transitionBall.style.top = '25%';
+                transitionBall.style.backgroundColor = '#5eb95e';
+            }, 600);
+            
+            // Hide ball
+            setTimeout(() => {
+                transitionBall.style.opacity = '0';
+            }, 1100);
+        }
+
+        // Handle system calls
+        function handleSystemCall(call, args = '') {
+            addToTerminal(`\nSystem call: ${call}(${args})`, 'terminal-output');
+            
+            animateSystemCall(() => {
+                switch (call) {
+                    case 'open':
+                        handleOpenCall(args);
+                        break;
+                    case 'read':
+                        handleReadCall(args);
+                        break;
+                    case 'write':
+                        handleWriteCall(args);
+                        break;
+                    case 'close':
+                        handleCloseCall(args);
+                        break;
+                    case 'fork':
+                        handleForkCall();
+                        break;
+                    case 'exec':
+                        handleExecCall(args);
+                        break;
+                    case 'exit':
+                        handleExitCall(args);
+                        break;
+                    case 'malloc':
+                        handleMallocCall(args);
+                        break;
+                    case 'free':
+                        handleFreeCall(args);
+                        break;
+                    case 'switch':
+                        handleSwitchCall(args);
+                        break;
+                    default:
+                        addToTerminal(`Unknown system call: ${call}`, 'error');
+                }
+                
+                // Refocus on the command input
+                commandInput.focus();
+            });
+        }
+
+        // Handle switch system call
+        function handleSwitchCall(args) {
+            const targetPid = parseInt(args);
+            
+            if (isNaN(targetPid)) {
+                addToTerminal('Error: Invalid PID', 'error');
+                return;
+            }
+            
+            const targetProcess = state.processes.find(p => p.pid === targetPid);
+            
+            if (targetProcess) {
+                state.currentPid = targetPid;
+                addToTerminal(`Switched to process ${targetPid} (${targetProcess.name})`, 'success');
+            } else {
+                addToTerminal(`Error: Process with PID ${targetPid} not found`, 'error');
+            }
+        }
+
+        // Handle open system call
+        function handleOpenCall(args) {
+            const [path, mode = 'r'] = args.split(' ');
+            
+            if (!path) {
+                addToTerminal('Error: No file path specified', 'error');
+                return;
+            }
+            
+            if (state.files[path]) {
+                const fd = state.nextFd++;
+                state.openFileDescriptors[fd] = { name: path, mode };
+                
+                // Update process open files count
+                const process = state.processes.find(p => p.pid === state.currentPid);
+                if (process) {
+                    process.openFiles++;
+                    updateProcessTable();
+                }
+                
+                addToTerminal(`File opened successfully. File descriptor: ${fd}`, 'success');
+            } else {
+                addToTerminal(`Error: File '${path}' not found`, 'error');
+            }
+        }
+
+        // Handle read system call
+        function handleReadCall(args) {
+            const fd = parseInt(args);
+            
+            if (isNaN(fd)) {
+                addToTerminal('Error: Invalid file descriptor', 'error');
+                return;
+            }
+            
+            if (state.openFileDescriptors[fd]) {
+                const file = state.openFileDescriptors[fd];
+                
+                if (file.mode.includes('r')) {
+                    const content = state.files[file.name];
+                    addToTerminal(`Read from fd ${fd} (${file.name}):\n${content}`, 'success');
+                } else {
+                    addToTerminal(`Error: File descriptor ${fd} not opened for reading`, 'error');
+                }
+            } else {
+                addToTerminal(`Error: Invalid file descriptor ${fd}`, 'error');
+            }
+        }
+
+        // Handle write system call
+        function handleWriteCall(args) {
+            const [fdStr, ...contentParts] = args.split(' ');
+            const fd = parseInt(fdStr);
+            const content = contentParts.join(' ');
+            
+            if (isNaN(fd) || !content) {
+                addToTerminal('Error: Invalid arguments for write()', 'error');
+                return;
+            }
+            
+            if (state.openFileDescriptors[fd]) {
+                const file = state.openFileDescriptors[fd];
+                
+                if (file.mode.includes('w')) {
+                    if (fd === 1) { // stdout
+                        addToTerminal(`Output: ${content}`, 'success');
+                    } else if (fd === 2) { // stderr
+                        addToTerminal(`Error: ${content}`, 'error');
+                    } else {
+                        state.files[file.name] = content;
+                        addToTerminal(`Wrote to fd ${fd} (${file.name}):\n${content}`, 'success');
+                    }
+                } else {
+                    addToTerminal(`Error: File descriptor ${fd} not opened for writing`, 'error');
+                }
+            } else {
+                addToTerminal(`Error: Invalid file descriptor ${fd}`, 'error');
+            }
+        }
+
+        // Handle close system call
+        function handleCloseCall(args) {
+            const fd = parseInt(args);
+            
+            if (isNaN(fd)) {
+                addToTerminal('Error: Invalid file descriptor', 'error');
+                return;
+            }
+            
+            if (fd > 2 && state.openFileDescriptors[fd]) {
+                const file = state.openFileDescriptors[fd];
+                delete state.openFileDescriptors[fd];
+                
+                // Update process open files count
+                const process = state.processes.find(p => p.pid === state.currentPid);
+                if (process) {
+                    process.openFiles--;
+                    updateProcessTable();
+                }
+                
+                addToTerminal(`Closed file descriptor ${fd} (${file.name})`, 'success');
+            } else if (fd <= 2) {
+                addToTerminal(`Error: Cannot close standard file descriptors (0, 1, 2)`, 'error');
+            } else {
+                addToTerminal(`Error: Invalid file descriptor ${fd}`, 'error');
+            }
+        }
+
+        // Handle fork system call
+        function handleForkCall() {
+            const parent = state.processes.find(p => p.pid === state.currentPid);
+            if (!parent) {
+                addToTerminal('Error: Current process not found', 'error');
+                return;
+            }
+            
+            const childPid = state.nextPid++;
+            const childProcess = {
+                pid: childPid,
+                name: parent.name,
+                state: 'Running',
+                openFiles: parent.openFiles,
+                memoryUsed: parent.memoryUsed,
+                memoryBlocks: [...parent.memoryBlocks]
+            };
+            
+            state.processes.push(childProcess);
+            updateProcessTable();
+            
+            addToTerminal(`Process forked. New PID: ${childPid}`, 'success');
+            addToTerminal(`In parent: fork() returned ${childPid}`, 'success');
+            addToTerminal(`In child: fork() returned 0`, 'success');
+        }
+
+        // Handle exec system call
+        function handleExecCall(args) {
+            if (!args) {
+                addToTerminal('Error: No program specified for exec()', 'error');
+                return;
+            }
+            
+            const process = state.processes.find(p => p.pid === state.currentPid);
+            if (!process) {
+                addToTerminal('Error: Current process not found', 'error');
+                return;
+            }
+            
+            const programName = args.split(' ')[0];
+            process.name = programName;
+            
+            // Simulate memory usage change
+            process.memoryUsed = (Math.random() * 5 + 1).toFixed(1) + ' MB';
+            
+            updateProcessTable();
+            addToTerminal(`Process ${state.currentPid} now running ${programName}`, 'success');
+        }
+
+        // Handle exit system call
+        function handleExitCall(args) {
+            const statusCode = parseInt(args) || 0;
+            
+            const processIndex = state.processes.findIndex(p => p.pid === state.currentPid);
+            if (processIndex === -1) {
+                addToTerminal('Error: Current process not found', 'error');
+                return;
+            }
+            
+            if (state.currentPid === 1) {
+                addToTerminal('Cannot exit init process (PID 1)', 'error');
+                return;
+            }
+            
+            // Free all memory allocated by this process
+            for (let i = 0; i < state.memory.length; i++) {
+                if (state.memory[i].owner === `Process ${state.currentPid}`) {
+                    state.memory[i] = { status: 'free', owner: null, data: null };
+                }
+            }
+            
+            // Delete any memory allocations by this process
+            Object.keys(state.allocatedMemory).forEach(memId => {
+                const memInfo = state.allocatedMemory[memId];
+                if (state.memory[memInfo.start]?.owner === `Process ${state.currentPid}`) {
+                    delete state.allocatedMemory[memId];
+                }
+            });
+            
+            // Remove process from process table
+            state.processes.splice(processIndex, 1);
+            
+            // Switch to init process
+            state.currentPid = 1;
+            
+            updateProcessTable();
+            initMemory();
+            
+            addToTerminal(`Process exited with status ${statusCode}`, 'success');
+        }
+
+        // Handle malloc system call
+        function handleMallocCall(args) {
+            const size = parseInt(args);
+            
+            if (isNaN(size) || size <= 0) {
+                addToTerminal('Error: Invalid size for malloc()', 'error');
+                return;
+            }
+            
+            // Find consecutive free blocks
+            let start = -1;
+            let consecutiveFree = 0;
+            
+            for (let i = 16; i < state.memory.length; i++) {
+                if (state.memory[i].status === 'free') {
+                    if (consecutiveFree === 0) {
+                        start = i;
+                    }
+                    consecutiveFree++;
+                    
+                    if (consecutiveFree === size) {
+                        break;
+                    }
+                } else {
+                    start = -1;
+                    consecutiveFree = 0;
+                }
+            }
+            
+            if (consecutiveFree < size) {
+                addToTerminal(`Error: Not enough contiguous memory for allocation of ${size} blocks`, 'error');
+                return;
+            }
+            
+            // Allocate memory with a string ID rather than timestamp
+            const memoryId = `mem_${Date.now()}`;
+            for (let i = 0; i < size; i++) {
+                state.memory[start + i] = {
+                    status: 'used',
+                    owner: `Process ${state.currentPid}`,
+                    data: `Allocated block ${i + 1}/${size}`
+                };
+            }
+            
+            // Update process memory usage
+            const process = state.processes.find(p => p.pid === state.currentPid);
+            if (process) {
+                // Extract the current memory value without the "MB" suffix
+                const currentMemory = parseFloat(process.memoryUsed) || 0;
+                process.memoryUsed = (currentMemory + size * 0.1).toFixed(1) + ' MB';
+                updateProcessTable();
+            }
+            
+            state.allocatedMemory[memoryId] = { 
+                start, 
+                size,
+                pid: state.currentPid // Store the process ID that owns this memory
+            };
+            
+            initMemory();
+            addToTerminal(`Memory allocated: ${size} blocks starting at address ${start}`, 'success');
+            addToTerminal(`Memory ID: ${memoryId}`, 'success');
+        }
+
+        // Handle free system call
+        function handleFreeCall(args) {
+            const memoryId = args;
+            
+            if (!memoryId) {
+                addToTerminal('Error: Invalid memory ID for free()', 'error');
+                return;
+            }
+            
+            if (!state.allocatedMemory[memoryId]) {
+                addToTerminal(`Error: Memory ID ${memoryId} not found or already freed`, 'error');
+                return;
+            }
+            
+            const { start, size, pid } = state.allocatedMemory[memoryId];
+            
+            // Check if the memory belongs to the current process
+            if (pid !== state.currentPid) {
+                addToTerminal(`Error: Memory ID ${memoryId} doesn't belong to the current process`, 'error');
+                return;
+            }
+            
+            // Free memory blocks
+            for (let i = 0; i < size; i++) {
+                state.memory[start + i] = { status: 'free', owner: null, data: null };
+            }
+            
+            // Update process memory usage
+            const process = state.processes.find(p => p.pid === state.currentPid);
+            if (process) {
+                const currentMemory = parseFloat(process.memoryUsed) || 0;
+                process.memoryUsed = Math.max(0, currentMemory - size * 0.1).toFixed(1) + ' MB';
+                updateProcessTable();
+            }
+            
+            delete state.allocatedMemory[memoryId];
+            
+            initMemory();
+            addToTerminal(`Memory freed: ${size} blocks starting at address ${start}`, 'success');
+        }
+
+        // Handle commands
+        function handleCommand(command) {
+            const [cmd, ...args] = command.trim().split(' ');
+            
+            switch (cmd.toLowerCase()) {
+                case 'help':
+                    addToTerminal('\nAvailable commands:');
+                    addToTerminal('help - Show this help message');
+                    addToTerminal('syscall <name> [args] - Execute a system call');
+                    addToTerminal('ls - List files in the system');
+                    addToTerminal('ps - Show processes');
+                    addToTerminal('cat <path> - Display file contents');
+                    addToTerminal('clear - Clear the terminal');
+                    addToTerminal('\nAvailable system calls:');
+                    addToTerminal('open, read, write, close, fork, exec, exit, malloc, free, switch');
+                    break;
+                    
+                case 'syscall':
+                    if (args.length === 0) {
+                        addToTerminal('Error: No system call specified', 'error');
+                        break;
+                    }
+                    
+                    const syscall = args[0];
+                    const syscallArgs = args.slice(1).join(' ');
+                    handleSystemCall(syscall, syscallArgs);
+                    break;
+                    
+                case 'ls':
+                    addToTerminal('\nFiles in the system:');
+                    Object.keys(state.files).forEach(file => {
+                        addToTerminal(file);
+                    });
+                    break;
+                    
+                case 'ps':
+                    addToTerminal('\nRunning processes:');
+                    state.processes.forEach(process => {
+                        addToTerminal(`${process.pid} ${process.name} (${process.state}, ${process.memoryUsed})`);
+                    });
+                    break;
+                    
+                case 'cat':
+                    if (args.length === 0) {
+                        addToTerminal('Error: No file specified', 'error');
+                        break;
+                    }
+                    
+                    const filePath = args[0];
+                    if (state.files[filePath]) {
+                        addToTerminal(`\nContents of ${filePath}:`);
+                        addToTerminal(state.files[filePath]);
+                    } else {
+                        addToTerminal(`Error: File '${filePath}' not found`, 'error');
+                    }
+                    break;
+                    
+                case 'clear':
+                    terminalOutput.innerHTML = '';
+                    break;
+                    
+                case '':
+                    // Do nothing for empty command
+                    break;
+                    
+                default:
+                    addToTerminal(`Command not found: ${cmd}`, 'error');
+                    addToTerminal('Type "help" for available commands');
+            }
+            
+            // Refocus on the command input
+            commandInput.focus();
+        }
+
+        // Set up event listeners
+        commandInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const command = commandInput.value;
+                addToTerminal(`\nuser@system:~$ ${command}`);
+                handleCommand(command);
+                commandInput.value = '';
+            }
+        });
+
+        // Set up system call buttons
+        document.querySelectorAll('.system-call-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const call = item.getAttribute('data-call');
+                let args = '';
+                
+                switch (call) {
+                    case 'open':
+                        args = prompt('Enter file path and mode (e.g., "/etc/hosts r"):', '/etc/hosts r');
+                        break;
+                    case 'read':
+                        args = prompt('Enter file descriptor:', '3');
+                        break;
+                    case 'write':
+                        args = prompt('Enter file descriptor and content:', '1 Hello, world!');
+                        break;
+                    case 'close':
+                        args = prompt('Enter file descriptor:', '3');
+                        break;
+                    case 'exec':
+                        args = prompt('Enter program name:', 'bash');
+                        break;
+                    case 'exit':
+                        args = prompt('Enter exit code:', '0');
+                        break;
+                    case 'malloc':
+                        args = prompt('Enter number of memory blocks to allocate:', '4');
+                        break;
+                    case 'free':
+                        args = prompt('Enter memory ID to free:', Object.keys(state.allocatedMemory)[0] || '');
+                        break;
+                    case 'switch':
+                        args = prompt('Enter PID to switch to:', '1');
+                        break;
+                }
+                
+                if (args !== null) { // Check if user didn't cancel the prompt
+                    handleSystemCall(call, args);
+                }
+            });
+        });
+
+        // Initialize memory visualization
+        initMemory();
+
+        // Example commands for demo
+        setTimeout(() => {
+            addToTerminal('\nTry these example commands:');
+            addToTerminal('syscall open /etc/hosts r');
+            addToTerminal('syscall read 3');
+            addToTerminal('syscall fork');
+            addToTerminal('syscall malloc 5');
+            addToTerminal('ps');
+        }, 1000);
+    </script>
+</body>
+</html>

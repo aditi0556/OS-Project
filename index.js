@@ -79,9 +79,9 @@
     {
       title: 'System Calls',
       desc: 'API bridge between user programs and the OS kernel',
-      by: '',
+      by: 'Alluri Shanthi',
       icon: 'fas fa-laptop-code',
-      href: 'system-calls/System Calls-os simulator.html',
+      href: 'system_calls/index.html',
       bg: 'linear-gradient(155deg,#0d0221 0%,#1a0a3b 50%,#0e1f5c 100%)'
     },
     {
@@ -194,14 +194,14 @@
       isNew: true
     },
     {
-  title: 'Interrupts',
-  desc: 'Interrupt handling and CPU response simulation',
-  by: 'A.D.L.Nikhileswar',
-  icon: 'fas fa-bell',
-  href: 'interrupts/interrupt.html',
-  bg: 'linear-gradient(155deg,#140000 0%,#3a0000 50%,#700000 100%)',
-  isNew: true
-}
+      title: 'Interrupts',
+      desc: 'Interrupt handling and CPU response simulation',
+      by: 'A.D.L.Nikhileswar',
+      icon: 'fas fa-bell',
+      href: 'interrupts/interrupt.html',
+      bg: 'linear-gradient(155deg,#140000 0%,#3a0000 50%,#700000 100%)',
+      isNew: true
+    }
   ];
 
 
