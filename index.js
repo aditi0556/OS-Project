@@ -119,7 +119,7 @@
     {
       title: 'Contiguous Allocation',
       desc: 'First-fit, best-fit and worst-fit algorithms',
-      by: '',
+      by: 'Aniketa R',
       icon: 'fas fa-users',
       href: 'cma/info.html',
       bg: 'linear-gradient(155deg,#040a1a 0%,#0a1e4a 50%,#0f3070 100%)'
@@ -161,7 +161,7 @@
     {
       title: 'MMU',
       desc: 'Address translation and TLB simulation',
-      by: '',
+      by: 'Aniketa R',
       icon: 'fas fa-sitemap',
       href: 'MMU/index.html',
       bg: 'linear-gradient(155deg,#001018 0%,#00293e 50%,#004060 100%)',
