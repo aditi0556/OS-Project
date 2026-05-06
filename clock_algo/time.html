@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clock Algorithm Simulator</title>
+  <link rel="stylesheet" href="time.css">
+</head>
+
+<body>
+  <canvas id="vortex-canvas"></canvas>
+
+  <header class="ps-header">
+    <nav class="ps-nav">
+      <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+    </nav>
+  </header>
+
+  <div class="page-spacer"></div>
+
+  <main>
+    <section class="container hero-screen">
+      <h1>Clock Algorithm Simulator</h1>
+      <p class="hero-copy text-center">Visualize how the Clock page replacement algorithm gives pages a second chance before replacing them in memory.</p>
+
+      <div class="app-layout">
+        <aside class="sidebar">
+          <div class="card">
+            <h2>Input Section</h2>
+            <div class="form-group">
+              <label for="frame-count">Number of Frames</label>
+              <input type="number" id="frame-count" min="1" placeholder="Enter frame count">
+            </div>
+            <div class="form-group">
+              <label for="page-reference">Page Reference Sequence</label>
+              <input type="text" id="page-reference" placeholder="Example: 1,2,3,4,1,2,5,1,2,3,4,5">
+            </div>
+            <div class="stack-actions">
+              <button type="button" id="create-frames-btn">Create Frames</button>
+              <button type="button" id="simulate-btn">Simulate Replacement</button>
+              <button type="button" class="button-gray" id="reset-btn">Reset</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>How It Works</h2>
+            <ul class="feature-list horizontal-feature-list">
+              <li><span class="flow-arrow">-&gt;</span><span>Pages are arranged in a circular list of memory frames.</span></li>
+              <li><span class="flow-arrow">-&gt;</span><span>Each frame stores a reference bit that records recent use.</span></li>
+              <li><span class="flow-arrow">-&gt;</span><span>If the pointer finds a referenced page, it clears the bit and gives that page a second chance.</span></li>
+              <li><span class="flow-arrow">-&gt;</span><span>The first frame found with reference bit 0 is replaced.</span></li>
+            </ul>
+          </div>
+        </aside>
+
+        <section class="main-content">
+          <div class="card compact-card snapshot-card">
+            <h2>Simulation Snapshot</h2>
+            <div id="simulation-summary" class="summary-grid"></div>
+          </div>
+
+          <div class="card compact-card status-card">
+            <h2>Current Status</h2>
+            <div id="simulation-status" class="status-banner status-neutral">
+              <div class="status-title">Ready to simulate</div>
+              <p>Create frames and enter a page sequence to begin.</p>
+            </div>
+          </div>
+
+          <div class="card wide-card">
+            <h2>Memory Frames</h2>
+            <div id="frame-container" class="stack-visual frame-visual"></div>
+          </div>
+
+          <div class="card wide-card timeline-card">
+            <h2>Replacement Timeline</h2>
+            <div id="replacement-log" class="timeline-log">
+              <div class="timeline-item empty-state">
+                <p>No simulation steps yet.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="container explanation-screen">
+      <div class="card explanation-card">
+        <h2>Detailed Explanation</h2>
+        <div id="algorithm-explanation" class="info-panel explanation-grid">
+          <div class="summary-card">
+            <span class="summary-label">Algorithm</span>
+            <span class="summary-value">Clock / Second Chance</span>
+            <p class="summary-note">A practical approximation of LRU using a circular pointer and one reference bit per page.</p>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Advantage</span>
+            <span class="summary-value">Low Overhead</span>
+            <p class="summary-note">The operating system tracks only one reference bit for each frame instead of maintaining a full history.</p>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Tradeoff</span>
+            <span class="summary-value">Not Always Optimal</span>
+            <p class="summary-note">A frequently used page can remain longer, but the decision is less precise than true least-recently-used replacement.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ps-footer">
+    <div class="ps-foot-inner">
+      <a href="../index.html" class="ps-logo">OS<span>Emulator</span></a>
+      <p>&copy; 2026 OS Emulator. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="time.js"></script>
+</body>
+
+</html>
