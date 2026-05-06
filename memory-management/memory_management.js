@@ -7,6 +7,7 @@ class MemoryAllocationEmulator {
         this.processes = [];
         this.processCounter = 1;
         this.partitionSize = 20; // For MFT
+        this.hasExternalFragmentation = false; // Track external fragmentation state
         
         this.initializeMemory();
         this.bindEvents();
@@ -103,6 +104,9 @@ class MemoryAllocationEmulator {
             return;
         }
 
+        // Clear external fragmentation visibility on new allocation attempt
+        this.hasExternalFragmentation = false;
+
         let result;
         if (this.allocationType === 'mft') {
             result = this.allocateMFT(processName, processSize);
@@ -174,10 +178,23 @@ class MemoryAllocationEmulator {
         }
 
         if (blockIndex === -1) {
-            return { 
-                success: false, 
-                message: `No suitable block available for process ${processName} (${processSize} units)` 
-            };
+            // Check if external fragmentation exists
+            const totalFreeSpace = this.memoryBlocks
+                .filter(block => block.status === 'free')
+                .reduce((total, block) => total + block.size, 0);
+            
+            if (totalFreeSpace >= processSize) {
+                this.hasExternalFragmentation = true;
+                return { 
+                    success: false, 
+                    message: `External Fragmentation: Total free space (${totalFreeSpace} units) is sufficient but no contiguous block available for process ${processName} (${processSize} units). Use compaction to resolve.` 
+                };
+            } else {
+                return { 
+                    success: false, 
+                    message: `Insufficient memory for process ${processName} (${processSize} units). Available: ${totalFreeSpace} units` 
+                };
+            }
         }
 
         const block = this.memoryBlocks[blockIndex];
@@ -326,12 +343,17 @@ class MemoryAllocationEmulator {
             });
         }
 
+        // Don't clear external fragmentation flag after compaction
+        // It will be cleared on next allocation attempt
+        // this.hasExternalFragmentation = false;
+
         this.showNotification('Memory compacted successfully', 'success');
         this.updateDisplay();
     }
 
     resetMemory() {
         this.processCounter = 1;
+        this.hasExternalFragmentation = false; // Reset external fragmentation flag
         this.initializeMemory();
         this.updateDisplay();
         this.showNotification('Memory reset successfully', 'success');
@@ -348,13 +370,14 @@ class MemoryAllocationEmulator {
             });
             return internalFragmentation;
         } else {
-            // External Fragmentation for MVT
-            const freeBlocks = this.memoryBlocks.filter(block => block.status === 'free');
-            if (freeBlocks.length <= 1) return 0;
-            
-            const totalFree = freeBlocks.reduce((total, block) => total + block.size, 0);
-            const largestFree = Math.max(...freeBlocks.map(b => b.size));
-            return totalFree - largestFree;
+            // External Fragmentation for MVT - only show when fragmentation exists
+            if (this.hasExternalFragmentation) {
+                const freeBlocks = this.memoryBlocks.filter(block => block.status === 'free');
+                const totalFree = freeBlocks.reduce((total, block) => total + block.size, 0);
+                return totalFree; // Show total free space as external fragmentation value
+            } else {
+                return 0; // Hide external fragmentation when not applicable
+            }
         }
     }
 
@@ -483,7 +506,16 @@ class MemoryAllocationEmulator {
         }
         
         const fragmentationType = this.allocationType === 'mft' ? 'Internal' : 'External';
-        document.getElementById('fragmentationStat').textContent = `${fragmentationType}: ${stats.fragmentation} units`;
+        const fragmentationValue = stats.fragmentation;
+        
+        // Only show external fragmentation if it exists (for MVT)
+        if (this.allocationType === 'mvt' && fragmentationValue === 0) {
+            document.getElementById('fragmentationStat').textContent = `${fragmentationType}: 0 units`;
+            document.getElementById('fragmentationStat').style.opacity = '0.3';
+        } else {
+            document.getElementById('fragmentationStat').textContent = `${fragmentationType}: ${fragmentationValue} units`;
+            document.getElementById('fragmentationStat').style.opacity = '1';
+        }
     }
 
     showNotification(message, type = 'info') {
