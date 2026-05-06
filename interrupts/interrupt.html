@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interrupt Handling Simulator</title>
+  <link rel="stylesheet" href="interrupt.css">
+</head>
+
+<body>
+  <canvas id="vortex-canvas"></canvas>
+
+  <header class="ps-header">
+    <nav class="ps-nav">
+      <a href="interrupt.html" class="ps-logo">OS<span>Emulator</span></a>
+    </nav>
+  </header>
+
+  <div class="page-spacer"></div>
+
+  <main>
+    <section class="container hero-screen">
+      <h1>Interrupt Handling Simulator</h1>
+      <p class="hero-copy text-center">See what the CPU does when an interrupt arrives: pause the running program, save its state, jump to the interrupt service routine, handle the event, and then return safely.</p>
+
+      <div class="app-layout">
+        <aside class="sidebar">
+          <div class="card">
+            <h2>Input Section</h2>
+            <div class="form-group">
+              <label for="interrupt-process">Running Process</label>
+              <input type="text" id="interrupt-process" value="Process P1">
+            </div>
+            <div class="form-group">
+              <label>Interrupt Type</label>
+              <div class="option-grid" id="interrupt-type-options">
+                <button type="button" class="option-card active-option" data-option-group="interrupt-type" data-option-value="timer">
+                  <strong>Timer</strong>
+                  <span>Time slice ends</span>
+                </button>
+                <button type="button" class="option-card" data-option-group="interrupt-type" data-option-value="keyboard">
+                  <strong>Keyboard</strong>
+                  <span>User input arrives</span>
+                </button>
+                <button type="button" class="option-card" data-option-group="interrupt-type" data-option-value="disk">
+                  <strong>Disk</strong>
+                  <span>I/O completes</span>
+                </button>
+                <button type="button" class="option-card" data-option-group="interrupt-type" data-option-value="systemCall">
+                  <strong>System Call</strong>
+                  <span>Software trap</span>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Priority Level</label>
+              <div class="priority-options" id="interrupt-priority-options">
+                <button type="button" class="option-chip active-option" data-option-group="interrupt-priority" data-option-value="normal">Normal</button>
+                <button type="button" class="option-chip" data-option-group="interrupt-priority" data-option-value="high">High</button>
+                <button type="button" class="option-chip" data-option-group="interrupt-priority" data-option-value="critical">Critical</button>
+              </div>
+            </div>
+            <div class="stack-actions">
+              <button type="button" id="load-interrupt-scenario">Load Scenario</button>
+              <button type="button" id="next-interrupt-step">Next Step</button>
+              <button type="button" id="play-interrupt-flow">Auto Play</button>
+              <button type="button" class="button-gray" id="reset-interrupt-flow">Reset</button>
+            </div>
+          </div>
+        </aside>
+
+        <section class="main-content">
+          <div class="card compact-card snapshot-card">
+            <h2>CPU Snapshot</h2>
+            <div id="cpu-snapshot" class="summary-grid"></div>
+          </div>
+
+          <div class="card compact-card status-card">
+            <h2>What The CPU Is Doing</h2>
+            <div id="interrupt-status" class="status-banner status-neutral">
+              <div class="status-title">Ready to simulate</div>
+              <p>Load a scenario to see how the CPU reacts when an interrupt arrives.</p>
+            </div>
+          </div>
+
+          <div class="card wide-card timeline-card">
+            <h2>Interrupt Timeline</h2>
+            <div id="interrupt-timeline" class="timeline-list"></div>
+          </div>
+
+          <div class="card wide-card stack-card">
+            <h2>Context Save Stack</h2>
+            <div id="interrupt-stack" class="stack-visual"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="container explanation-screen">
+      <div class="card explanation-card">
+        <h2>Detailed Explanation</h2>
+        <div id="interrupt-explanation" class="info-panel">
+          <p>No interrupt steps generated yet.</p>
+        </div>
+      </div>
+
+      <div class="card how-it-works-card">
+        <h2>How It Works</h2>
+        <ul class="feature-list horizontal-feature-list">
+          <li><span class="flow-arrow">-&gt;</span><span>The CPU completes the current instruction before responding to a maskable interrupt.</span></li>
+          <li><span class="flow-arrow">-&gt;</span><span>It saves the current process context such as program counter, status, and registers.</span></li>
+          <li><span class="flow-arrow">-&gt;</span><span>The CPU switches to kernel mode and jumps to the interrupt service routine.</span></li>
+          <li><span class="flow-arrow">-&gt;</span><span>After the handler finishes, the saved context is restored and execution resumes.</span></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ps-footer">
+    <div class="ps-foot-inner">
+      <a href="interrupt.html" class="ps-logo">OS<span>Emulator</span></a>
+      <p>&copy; 2026 OS Emulator. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="interrupt.js"></script>
+</body>
+
+</html>
