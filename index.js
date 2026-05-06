@@ -135,7 +135,7 @@
     {
       title: 'Disk Scheduling',
       desc: 'SSTF, SCAN and C-SCAN with seek-time charts',
-      by: '',
+      by: 'Ajay Kumar',
       icon: 'fas fa-tasks',
       href: 'disk_sched/index.html',
       bg: 'linear-gradient(155deg,#000d1a 0%,#002040 50%,#003566 100%)'
