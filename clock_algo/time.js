@@ -3,7 +3,7 @@ const timeState = {
   pointer: 0,
   hits: 0,
   misses: 0,
-  logs: [],
+  history: [],
   lastMessage: 'Create frames and enter a page sequence to begin.'
 };
 
@@ -130,10 +130,6 @@ function escapeHtml(text) {
     .replaceAll("'", '&#39;');
 }
 
-function pushLog(type, title, message) {
-  timeState.logs.push({ type, title, message });
-}
-
 function updateSummary() {
   const container = document.getElementById('simulation-summary');
   const total = timeState.hits + timeState.misses;
@@ -198,21 +194,52 @@ function renderFrames() {
   `).join('');
 }
 
-function renderLog() {
-  const container = document.getElementById('replacement-log');
+function renderTable() {
+  const tableHead = document.getElementById('frame-table-head');
+  const tableBody = document.getElementById('frame-table-body');
 
-  if (!timeState.logs.length) {
-    container.innerHTML = '<div class="timeline-item empty-state"><p>No simulation steps yet.</p></div>';
+  if (!timeState.memoryFrames.length) {
+    tableHead.innerHTML = '';
+    tableBody.innerHTML = '<tr><td colspan="1">Create frames to generate the frame table.</td></tr>';
     return;
   }
 
-  container.innerHTML = timeState.logs.map((entry, index) => `
-    <div class="timeline-item log-entry ${escapeHtml(entry.type)}">
-      <div class="log-badge">${index + 1}</div>
-      <div class="log-title">${escapeHtml(entry.title)}</div>
-      <p>${escapeHtml(entry.message)}</p>
-    </div>
+  const frameHeaders = timeState.memoryFrames.map((_, index) => `
+    <th>Frame ${index}</th>
+    <th>Ref ${index}</th>
   `).join('');
+
+  tableHead.innerHTML = `
+    <tr>
+      <th>Step</th>
+      <th>Page</th>
+      <th>Status</th>
+      <th>Pointer</th>
+      ${frameHeaders}
+    </tr>
+  `;
+
+  if (!timeState.history.length) {
+    tableBody.innerHTML = `<tr><td colspan="${4 + timeState.memoryFrames.length * 2}">No replacements processed yet.</td></tr>`;
+    return;
+  }
+
+  tableBody.innerHTML = timeState.history.map((entry) => {
+    const cells = entry.frames.map((frame) => `
+      <td>${frame.pageId === null ? 'Empty' : escapeHtml(frame.pageId)}</td>
+      <td>${frame.referenced ? '1' : '0'}</td>
+    `).join('');
+
+    return `
+      <tr>
+        <td>${entry.step}</td>
+        <td>${escapeHtml(entry.page)}</td>
+        <td class="${entry.status === 'Hit' ? 'table-hit' : 'table-miss'}">${entry.status}</td>
+        <td>${entry.pointer}</td>
+        ${cells}
+      </tr>
+    `;
+  }).join('');
 }
 
 function renderExplanation() {
@@ -229,7 +256,7 @@ function renderExplanation() {
     <div class="summary-card">
       <span class="summary-label">Latest Result</span>
       <span class="summary-value">${escapeHtml(timeState.lastMessage)}</span>
-      <p class="summary-note">The simulator reports every hit, second chance, empty-frame load, and replacement decision.</p>
+      <p class="summary-note">Each row stores the state of every frame immediately after a page request is processed.</p>
     </div>
     <div class="summary-card">
       <span class="summary-label">Miss Ratio</span>
@@ -243,13 +270,23 @@ function renderAll(statusType = 'neutral') {
   updateSummary();
   updateStatus(statusType);
   renderFrames();
-  renderLog();
+  renderTable();
   renderExplanation();
 }
 
+function resetStateForSimulation(frameCount) {
+  timeState.pointer = 0;
+  timeState.hits = 0;
+  timeState.misses = 0;
+  timeState.history = [];
+  timeState.memoryFrames = Array.from({ length: frameCount }, () => ({
+    pageId: null,
+    referenced: false
+  }));
+}
+
 function createFrames() {
-  const frameCountInput = document.getElementById('frame-count');
-  const frameCount = Number.parseInt(frameCountInput.value, 10);
+  const frameCount = Number.parseInt(document.getElementById('frame-count').value, 10);
 
   if (!Number.isInteger(frameCount) || frameCount <= 0) {
     timeState.lastMessage = 'Enter a valid frame count greater than 0.';
@@ -257,16 +294,8 @@ function createFrames() {
     return;
   }
 
-  timeState.memoryFrames = Array.from({ length: frameCount }, () => ({
-    pageId: null,
-    referenced: false
-  }));
-  timeState.pointer = 0;
-  timeState.hits = 0;
-  timeState.misses = 0;
-  timeState.logs = [];
+  resetStateForSimulation(frameCount);
   timeState.lastMessage = `Created ${frameCount} memory frames.`;
-  pushLog('info', 'Frames Created', `Initialized ${frameCount} empty frames and reset the clock pointer to frame 0.`);
   renderAll('safe');
 }
 
@@ -283,6 +312,19 @@ function parseSequence() {
     .map((value) => Number(value));
 }
 
+function recordHistory(step, pageId, status) {
+  timeState.history.push({
+    step,
+    page: pageId,
+    status,
+    pointer: timeState.pointer,
+    frames: timeState.memoryFrames.map((frame) => ({
+      pageId: frame.pageId,
+      referenced: frame.referenced
+    }))
+  });
+}
+
 function simulateClock() {
   if (!timeState.memoryFrames.length) {
     timeState.lastMessage = 'Create frames before running the simulation.';
@@ -297,23 +339,17 @@ function simulateClock() {
     return;
   }
 
-  timeState.hits = 0;
-  timeState.misses = 0;
-  timeState.logs = [];
-  timeState.pointer = 0;
-  timeState.memoryFrames = timeState.memoryFrames.map(() => ({
-    pageId: null,
-    referenced: false
-  }));
+  const frameCount = timeState.memoryFrames.length;
+  resetStateForSimulation(frameCount);
 
-  sequence.forEach((pageId) => {
+  sequence.forEach((pageId, index) => {
     const hitIndex = timeState.memoryFrames.findIndex((frame) => frame.pageId === pageId);
 
     if (hitIndex !== -1) {
       timeState.memoryFrames[hitIndex].referenced = true;
       timeState.hits += 1;
       timeState.lastMessage = `Page ${pageId} was found in memory.`;
-      pushLog('hit', `Page ${pageId} Hit`, `Page ${pageId} is already in frame ${hitIndex}, so its reference bit is set to 1.`);
+      recordHistory(index + 1, pageId, 'Hit');
       return;
     }
 
@@ -326,30 +362,25 @@ function simulateClock() {
       if (currentFrame.pageId === null) {
         currentFrame.pageId = pageId;
         currentFrame.referenced = true;
-        pushLog('miss', `Page ${pageId} Loaded`, `Frame ${timeState.pointer} was empty, so page ${pageId} was inserted and marked referenced.`);
-        timeState.lastMessage = `Page ${pageId} loaded into empty frame ${timeState.pointer}.`;
         timeState.pointer = (timeState.pointer + 1) % timeState.memoryFrames.length;
         replaced = true;
       } else if (!currentFrame.referenced) {
-        const oldPage = currentFrame.pageId;
         currentFrame.pageId = pageId;
         currentFrame.referenced = true;
-        pushLog('miss', `Page ${pageId} Replaced Page ${oldPage}`, `Frame ${timeState.pointer} had reference bit 0, so page ${oldPage} was replaced by page ${pageId}.`);
-        timeState.lastMessage = `Page ${pageId} replaced page ${oldPage} in frame ${timeState.pointer}.`;
         timeState.pointer = (timeState.pointer + 1) % timeState.memoryFrames.length;
         replaced = true;
       } else {
         currentFrame.referenced = false;
-        pushLog('info', 'Second Chance', `Frame ${timeState.pointer} held page ${currentFrame.pageId}, so its reference bit was cleared and the pointer moved on.`);
-        timeState.lastMessage = `Frame ${timeState.pointer} gave page ${currentFrame.pageId} a second chance.`;
         timeState.pointer = (timeState.pointer + 1) % timeState.memoryFrames.length;
       }
     }
+
+    timeState.lastMessage = `Page ${pageId} caused a miss and was placed using the clock pointer.`;
+    recordHistory(index + 1, pageId, 'Miss');
   });
 
   const total = timeState.hits + timeState.misses;
   const hitRatio = total ? (timeState.hits / total).toFixed(2) : '0.00';
-  pushLog('info', 'Simulation Complete', `Total hits: ${timeState.hits}, total misses: ${timeState.misses}, hit ratio: ${hitRatio}.`);
   timeState.lastMessage = `Simulation complete. Hits: ${timeState.hits}, misses: ${timeState.misses}, hit ratio: ${hitRatio}.`;
   renderAll('safe');
 }
@@ -361,7 +392,7 @@ function resetSimulation() {
   timeState.pointer = 0;
   timeState.hits = 0;
   timeState.misses = 0;
-  timeState.logs = [];
+  timeState.history = [];
   timeState.lastMessage = 'Simulation reset. Create frames and enter a page sequence to begin again.';
   renderAll('neutral');
 }
