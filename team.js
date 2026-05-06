@@ -70,12 +70,12 @@
   window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
 
   const TEAM_MEMBERS = [
-    { name: 'A.D.L.Nikhileswar', roll: 'Roll Number: 241CS201', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#100020 0%,#300050 50%,#4a0070 100%)' },
-    { name: 'Abhyuday K Hedge', roll: 'Roll Number: 241CS202', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#020c14 0%,#0a2540 50%,#0d3b6e 100%)' },
-    { name: 'Aditi Sinha', roll: 'Roll Number: 241CS203', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#0a0010 0%,#220035 50%,#3d0060 100%)' },
-    { name: 'Affan Arshad', roll: 'Roll Number: 241CS204', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#060024 0%,#1b0556 50%,#2d1b69 100%)' },
-    { name: 'Ajay Kumar', roll: 'Roll Number: 241CS205', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#000d1a 0%,#002040 50%,#003566 100%)' },
-    { name: 'Alluri Shanthi', roll: 'Roll Number: 241CS207', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#0d0221 0%,#1a0a3b 50%,#0e1f5c 100%)' },
+    { name: 'Abhyuday K Hedge', roll: 'Roll Number: 241CS201', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#020c14 0%,#0a2540 50%,#0d3b6e 100%)' },
+    { name: 'Aditi Sinha', roll: 'Roll Number: 241CS202', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#0a0010 0%,#220035 50%,#3d0060 100%)' },
+    { name: 'Affan Arshad', roll: 'Roll Number: 241CS203', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#060024 0%,#1b0556 50%,#2d1b69 100%)' },
+    { name: 'Ajay Kumar', roll: 'Roll Number: 241CS204', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#000d1a 0%,#002040 50%,#003566 100%)' },
+    { name: 'Alluri Shanthi', roll: 'Roll Number: 241CS206', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#0d0221 0%,#1a0a3b 50%,#0e1f5c 100%)' },
+    { name: 'A.D.L.Nikhileswar', roll: 'Roll Number: 241CS207', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#100020 0%,#300050 50%,#4a0070 100%)' },
     { name: 'Aniketa R', roll: 'Roll Number: 241CS208', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#040a1a 0%,#0a1e4a 50%,#0f3070 100%)' },
     { name: 'Ankit Kumar', roll: 'Roll Number: 241CS209', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#030a20 0%,#081d50 50%,#0d2d7a 100%)' },
     { name: 'Ankit Kumar Saran', roll: 'Roll Number: 241CS210', icon: 'fas fa-user-graduate', bg: 'linear-gradient(155deg,#001a1a 0%,#003d4a 50%,#005f73 100%)' }
