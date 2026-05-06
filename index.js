@@ -192,7 +192,16 @@
       href: 'dma/dma.html',
       bg: 'linear-gradient(155deg,#0a0018 0%,#1a0040 50%,#2d0070 100%)',
       isNew: true
-    }
+    },
+    {
+  title: 'Interrupts',
+  desc: 'Interrupt handling and CPU response simulation',
+  by: 'A.D.L.Nikhileswar',
+  icon: 'fas fa-bell',
+  href: 'interrupts/interrupt.html',
+  bg: 'linear-gradient(155deg,#140000 0%,#3a0000 50%,#700000 100%)',
+  isNew: true
+}
   ];
 
 
@@ -224,7 +233,7 @@
           </div>
 
           <div class="hero-stats">
-            <div class="stat-chip"><span class="n">15</span><span class="lbl">Modules</span></div>
+            <div class="stat-chip"><span class="n">16</span><span class="lbl">Modules</span></div>
             <div class="stat-chip"><span class="n">8+</span><span class="lbl">Core Topics</span></div>
             <div class="stat-chip"><span class="n">100%</span><span class="lbl">In-Browser</span></div>
             <div class="stat-chip"><span class="n">Live</span><span class="lbl">Simulations</span></div>
@@ -309,7 +318,7 @@
       <div class="wrap">
         <div class="foot-inner">
           <div class="logo">OS<span>Emulator</span></div>
-          <p>&copy; 2025 OS Emulator Project. All rights reserved.</p>
+          <p>&copy; 2026 OS Emulator Project. All rights reserved.</p>
         </div>
       </div>
     `;
