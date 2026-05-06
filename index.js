@@ -103,7 +103,7 @@
     {
       title: 'Deadlocks',
       desc: "Detection, prevention and Banker's algorithm",
-      by: '',
+      by: 'A.D.L.Nikhileswar',
       icon: 'fas fa-random',
       href: 'deadlock/deadlock.html',
       bg: 'linear-gradient(155deg,#100020 0%,#300050 50%,#4a0070 100%)'
