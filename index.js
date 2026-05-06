@@ -135,7 +135,7 @@
     {
       title: 'Disk Scheduling',
       desc: 'SSTF, SCAN and C-SCAN with seek-time charts',
-      by: '',
+      by: 'Ajay Kumar',
       icon: 'fas fa-tasks',
       href: 'disk_sched/index.html',
       bg: 'linear-gradient(155deg,#000d1a 0%,#002040 50%,#003566 100%)'
@@ -148,24 +148,7 @@
       href: 'file_system/file_system.html',
       bg: 'linear-gradient(155deg,#030a20 0%,#081d50 50%,#0d2d7a 100%)'
     },
-    {
-      title: 'IPC',
-      desc: 'Pipes, message queues and shared memory',
-      by: '',
-      icon: 'fas fa-code-branch',
-      href: 'inter-process-communication/ipc.html',
-      bg: 'linear-gradient(155deg,#020818 0%,#071a3e 50%,#0f2d6b 100%)',
-      isNew: true
-    },
-    {
-      title: 'Command Line',
-      desc: 'Terminal emulator with interactive shell commands',
-      by: '',
-      icon: 'fas fa-terminal',
-      href: 'tty-sim/term.html',
-      bg: 'linear-gradient(155deg,#050a00 0%,#142000 50%,#213600 100%)',
-      isNew: true
-    },
+
     {
       title: 'RTOS',
       desc: 'Real-time scheduling with deadline tracking',
@@ -233,7 +216,7 @@
           </div>
 
           <div class="hero-stats">
-            <div class="stat-chip"><span class="n">16</span><span class="lbl">Modules</span></div>
+            <div class="stat-chip"><span class="n">13</span><span class="lbl">Modules</span></div>
             <div class="stat-chip"><span class="n">8+</span><span class="lbl">Core Topics</span></div>
             <div class="stat-chip"><span class="n">100%</span><span class="lbl">In-Browser</span></div>
             <div class="stat-chip"><span class="n">Live</span><span class="lbl">Simulations</span></div>
@@ -260,7 +243,7 @@
     sec.innerHTML = `
       <div class="wrap">
         <div class="section-head">
-          <span class="section-kicker">15 Interactive Modules</span>
+          <span class="section-kicker">13 Interactive Modules</span>
           <h2>Explore the Curriculum</h2>
           <p>Hover a card to focus — everything else fades away.</p>
         </div>

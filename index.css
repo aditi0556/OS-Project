@@ -248,8 +248,8 @@ header.scrolled nav {
 
 /* siblings dimmed when any card is hovered */
 .fc-grid.fc-active .fc-card:not(.fc-focused) {
-  opacity:.3;
-  filter:blur(2px) saturate(.3);
+  opacity:.6;
+  filter:blur(0.5px) saturate(.7);
 }
 
 /* ── individual card ── */
@@ -386,8 +386,8 @@ footer p { font-size:.78rem; color:var(--subtle); margin:0; }
 @media (max-width:960px) {
   .fc-grid { grid-template-columns:repeat(2,1fr); }
   .fc-grid.fc-active .fc-card:not(.fc-focused) {
-    filter:blur(1px) saturate(.4);
-    opacity:.35;
+    filter:blur(0.5px) saturate(.7);
+    opacity:.6;
   }
 }
 @media (max-width:560px) {
