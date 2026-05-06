@@ -112,9 +112,23 @@ class MemoryManagementSimulator {
   updatePageVisualization() {
     this.virtualMemory.innerHTML = '';
     this.frameMemory.innerHTML = '';
+
+    // Virtual: in page order
     this.pages.forEach(page => {
-      this.virtualMemory.appendChild(this.createPageElement(page, true));
-      if (page.valid) this.frameMemory.appendChild(this.createPageElement(page, false));
+      const el = this.createPageElement(page, true);
+      el.dataset.page = page.pageNumber;
+      this.virtualMemory.appendChild(el);
+    });
+
+    // Physical: sort by frameNumber so entries don't overlap
+    const validPages = this.pages.filter(p => p.valid)
+      .slice()
+      .sort((a, b) => a.frameNumber - b.frameNumber);
+
+    validPages.forEach((page, idx) => {
+      const el = this.createPageElement(page, false, idx, validPages.length);
+      el.dataset.page = page.pageNumber;
+      this.frameMemory.appendChild(el);
     });
   }
 
@@ -150,13 +164,21 @@ class MemoryManagementSimulator {
     return el;
   }
 
-  createPageElement(page, isVirtual) {
+  createPageElement(page, isVirtual, idx = null, total = null) {
     const el = document.createElement('div');
     el.className = 'page';
-    const position = isVirtual
-      ? (page.pageNumber * 100 / 16)
-      : (page.frameNumber * 100 / 32);
-    const height = isVirtual ? (100 / 16) : (100 / 32);
+
+    let position, height;
+    if (isVirtual) {
+      position = page.pageNumber * 100 / 16;
+      height = 100 / 16;
+    } else {
+      // Stack frames evenly top-to-bottom using their sorted index
+      const count = total || 1;
+      position = idx * 100 / count;
+      height = 100 / count;
+    }
+
     el.style.top = `${position}%`;
     el.style.height = `${height}%`;
     el.style.backgroundColor = page.valid ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
@@ -258,11 +280,18 @@ class MemoryManagementSimulator {
   animateAddressTranslation(num, offset, physicalAddress, isSegmentation) {
     const elements = document.querySelectorAll(isSegmentation ? '.segment' : '.page');
     elements.forEach(el => el.style.opacity = '0.2');
-    const virtualIndex = isSegmentation
-      ? this.segments.findIndex(s => s.id === num)
-      : this.pages.findIndex(p => p.pageNumber === num);
-    const vEl = (isSegmentation ? this.logicalMemory : this.virtualMemory).children[virtualIndex];
-    const pEl = (isSegmentation ? this.physicalMemory : this.frameMemory).children[virtualIndex];
+
+    let vEl, pEl;
+    if (isSegmentation) {
+      const virtualIndex = this.segments.findIndex(s => s.id === num);
+      vEl = this.logicalMemory.children[virtualIndex];
+      pEl = this.physicalMemory.children[virtualIndex];
+    } else {
+      // Use data-page attribute for reliable lookup
+      vEl = this.virtualMemory.querySelector(`[data-page="${num}"]`);
+      pEl = this.frameMemory.querySelector(`[data-page="${num}"]`);
+    }
+
     if (vEl) { vEl.style.opacity = '1'; vEl.style.boxShadow = '0 0 12px rgba(168,85,247,0.6)'; }
     if (pEl) { pEl.style.opacity = '1'; pEl.style.boxShadow = '0 0 12px rgba(168,85,247,0.6)'; }
     setTimeout(() => {
