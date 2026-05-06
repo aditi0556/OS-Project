@@ -255,7 +255,7 @@ header.scrolled nav {
 /* ── individual card ── */
 .fc-card {
   position:relative;
-  height:320px;
+  height:200px;
   border-radius:var(--r-lg);
   overflow:hidden;
   cursor:pointer;
@@ -265,12 +265,12 @@ header.scrolled nav {
   opacity:0;
   translate:0 24px;
   transition:
-    opacity    .38s var(--ease),
-    filter     .38s var(--ease),
-    translate  .38s var(--ease),
-    transform  .32s var(--ease),
-    box-shadow .32s var(--ease),
-    border-color .28s var(--ease);
+    opacity    .25s var(--ease),
+    filter     .25s var(--ease),
+    translate  .25s var(--ease),
+    transform  .2s var(--ease),
+    box-shadow .2s var(--ease),
+    border-color .18s var(--ease);
 }
 
 /* once JS adds .in-view the card appears */
@@ -283,7 +283,7 @@ header.scrolled nav {
 .fc-bg {
   position:absolute; inset:0;
   background-size:cover; background-position:center;
-  transition:transform .55s var(--ease);
+  transition:transform .35s var(--ease);
 }
 .fc-card.fc-focused .fc-bg { transform:scale(1.06); }
 
@@ -332,7 +332,7 @@ header.scrolled nav {
 .fc-desc {
   font-size:.75rem; color:rgba(255,255,255,.5);
   margin:0; max-height:0; overflow:hidden; opacity:0;
-  transition:max-height .3s var(--ease), opacity .3s var(--ease);
+  transition:max-height .2s var(--ease), opacity .2s var(--ease);
 }
 .fc-card.fc-focused .fc-desc { max-height:48px; opacity:1; }
 
@@ -351,9 +351,9 @@ header.scrolled nav {
   padding:5px 13px; border-radius:999px;
   opacity:0; translate:0 8px;
   transition:
-    opacity   .25s var(--ease),
-    translate .25s var(--ease),
-    background .2s;
+    opacity   .15s var(--ease),
+    translate .15s var(--ease),
+    background .15s;
 }
 .fc-explore::after { content:'→'; margin-left:2px; }
 .fc-explore:hover { background:rgba(255,255,255,.22); color:#fff; }
@@ -395,7 +395,7 @@ footer p { font-size:.78rem; color:var(--subtle); margin:0; }
   .navigation { display:none; }
   nav { padding:8px 14px; }
   .fc-grid { grid-template-columns:1fr 1fr; gap:8px; }
-  .fc-card { height:240px; }
+  .fc-card { height:150px; }
   .fc-grid.fc-active .fc-card:not(.fc-focused) {
     filter:none; opacity:.5;
   }
@@ -403,5 +403,5 @@ footer p { font-size:.78rem; color:var(--subtle); margin:0; }
 }
 @media (max-width:380px) {
   .fc-grid { grid-template-columns:1fr; }
-  .fc-card { height:220px; }
+  .fc-card { height:140px; }
 }
