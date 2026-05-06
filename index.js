@@ -119,9 +119,9 @@
     {
       title: 'Contiguous Allocation',
       desc: 'First-fit, best-fit and worst-fit algorithms',
-      by: 'Aniketa R',
+      by: '',
       icon: 'fas fa-users',
-      href: 'cma/cma.html',
+      href: 'cma/info.html',
       bg: 'linear-gradient(155deg,#040a1a 0%,#0a1e4a 50%,#0f3070 100%)'
     },
     {
@@ -148,6 +148,7 @@
       href: 'file_system/file_system.html',
       bg: 'linear-gradient(155deg,#030a20 0%,#081d50 50%,#0d2d7a 100%)'
     },
+
     {
       title: 'RTOS',
       desc: 'Real-time scheduling with deadline tracking',
@@ -160,9 +161,9 @@
     {
       title: 'MMU',
       desc: 'Address translation and TLB simulation',
-      by: 'Aniketa R',
+      by: '',
       icon: 'fas fa-sitemap',
-      href: 'mmu/mmu.html',
+      href: 'MMU/index.html',
       bg: 'linear-gradient(155deg,#001018 0%,#00293e 50%,#004060 100%)',
       isNew: true
     },
