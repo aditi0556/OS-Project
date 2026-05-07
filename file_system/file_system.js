@@ -249,7 +249,18 @@
     if (!S.selected) return;
     const { id, type } = S.selected;
     if (id === 'root') return log('Cannot delete root.', 'error');
-    type === 'file' ? deleteFile(id) : deleteDir(id);
+    if (type === 'file') {
+      const f = S.files[id];
+      if (!f) return;
+      // DAG: if file has multiple parents, prompt which link to remove
+      if (S.dirStruct === 'dag' && f.parentDirIds.length > 1) {
+        showUnlinkModal(id);
+      } else {
+        deleteFile(id);
+      }
+    } else {
+      deleteDir(id);
+    }
   }
 
   function deleteFile(id) {
@@ -260,10 +271,66 @@
       if (S.dirs[pid]) S.dirs[pid].fileIds = S.dirs[pid].fileIds.filter(x => x !== id);
     });
     delete S.files[id];
-    log(`Deleted file "${f.name}"`, 'success');
+    log(`Deleted file "${f.name}" entirely (all references removed)`, 'success');
     S.selected = null;
     updateDeleteBtn();
     renderAll();
+  }
+
+  function unlinkFile(fileId, fromDirId) {
+    const f = S.files[fileId];
+    const d = S.dirs[fromDirId];
+    if (!f || !d) return;
+    f.parentDirIds = f.parentDirIds.filter(pid => pid !== fromDirId);
+    d.fileIds      = d.fileIds.filter(fid => fid !== fileId);
+    log(`Unlinked "${f.name}" from "${d.name}" — still exists in ${f.parentDirIds.map(pid => '"' + (S.dirs[pid]?.name || pid) + '"').join(', ')}`, 'success');
+    S.selected = null;
+    updateDeleteBtn();
+    renderAll();
+  }
+
+  function showUnlinkModal(fileId) {
+    const existing = document.getElementById('dag-unlink-modal');
+    if (existing) existing.remove();
+
+    const f = S.files[fileId];
+    const parents = f.parentDirIds.map(pid => ({ pid, name: S.dirs[pid]?.name || pid }));
+
+    const modal = document.createElement('div');
+    modal.id        = 'dag-unlink-modal';
+    modal.className = 'dag-modal';
+    modal.innerHTML = `
+      <div class="dag-modal-box">
+        <h3><i class="fas fa-unlink" style="margin-right:8px;color:#f87171"></i>Remove Reference — DAG</h3>
+        <p><strong style="color:${f.color}">${escHtml(f.name)}</strong> is linked to ${parents.length} directories. Choose what to do:</p>
+        <div class="form-group" style="margin-top:12px">
+          <label>Unlink from a specific directory</label>
+          <select id="dag-unlink-dir-sel">
+            ${parents.map(p => `<option value="${p.pid}">${p.name}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button id="dag-unlink-confirm" class="btn-indigo" style="flex:1">Unlink from selected</button>
+          <button id="dag-unlink-cancel"  class="btn-ghost-sm" style="flex:1">Cancel</button>
+        </div>
+        <div class="divider" style="margin:14px 0"></div>
+        <button id="dag-delete-all" style="width:100%;padding:9px;border-radius:999px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#f87171;font-family:'Outfit',sans-serif;font-weight:600;font-size:.82rem;cursor:pointer;">
+          <i class="fas fa-trash" style="margin-right:6px"></i>Delete entirely (remove all ${parents.length} references)
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    q('#dag-unlink-confirm').addEventListener('click', () => {
+      unlinkFile(fileId, q('#dag-unlink-dir-sel').value);
+      modal.remove();
+    });
+    q('#dag-unlink-cancel').addEventListener('click', () => modal.remove());
+    q('#dag-delete-all').addEventListener('click', () => {
+      deleteFile(fileId);
+      modal.remove();
+    });
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
   }
 
   function deleteDir(id) {
