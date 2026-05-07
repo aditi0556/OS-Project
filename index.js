@@ -110,7 +110,7 @@
     },
     {
       title: 'Memory Management',
-      desc: 'Paging, segmentation and virtual memory techniques',
+      desc: 'MVT and MFT',
       by: 'Ankit Kumar Saran',
       icon: 'fas fa-shield-alt',
       href: 'memory-management/memory-management.html',
