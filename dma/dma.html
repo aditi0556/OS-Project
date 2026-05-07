@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DMA Transfer Simulator — OSEmulator</title>
-  <meta name="description" content="Interactive simulation comparing DMA (Direct Memory Access) vs Programmed I/O data transfer, visualizing interrupt frequency and CPU utilization.">
+  <meta name="description"
+    content="Interactive simulation comparing DMA (Direct Memory Access) vs Programmed I/O data transfer, visualizing interrupt frequency and CPU utilization.">
   <link rel="stylesheet" href="dma.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
   <canvas id="vortex-canvas"></canvas>
 
@@ -37,11 +40,19 @@
     <section id="theory">
       <div class="card" style="margin-bottom:24px;">
         <h2><i class="fas fa-book" style="color:var(--indigo);margin-right:8px;"></i>How DMA Works</h2>
-        <p style="margin-bottom:12px;">In traditional <strong style="color:var(--rose);">Programmed I/O (PIO)</strong>, the CPU handles every single byte of data transfer between devices and memory. Each byte transferred generates an <strong>interrupt</strong>, overwhelming the CPU with overhead and leaving it unavailable for other work.</p>
-        <p style="margin-bottom:12px;">With <strong style="color:var(--cyan);">Direct Memory Access (DMA)</strong>, the DMA controller takes over the transfer. After the CPU sets up buffers, pointers, and counters, the DMA controller transfers an <strong>entire block</strong> of data directly between the device and main memory — with <strong>no CPU intervention</strong>. Only <strong>one interrupt per block</strong> is generated to signal completion.</p>
+        <p style="margin-bottom:12px;">In traditional <strong style="color:var(--rose);">Programmed I/O (PIO)</strong>,
+          the CPU handles every single byte of data transfer between devices and memory. Each byte transferred generates
+          an <strong>interrupt</strong>, overwhelming the CPU with overhead and leaving it unavailable for other work.
+        </p>
+        <p style="margin-bottom:12px;">With <strong style="color:var(--cyan);">Direct Memory Access (DMA)</strong>, the
+          DMA controller takes over the transfer. After the CPU sets up buffers, pointers, and counters, the DMA
+          controller transfers an <strong>entire block</strong> of data directly between the device and main memory —
+          with <strong>no CPU intervention</strong>. Only <strong>one interrupt per block</strong> is generated to
+          signal completion.</p>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
-          <div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.2);border-radius:var(--r);padding:14px;">
+          <div
+            style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.2);border-radius:var(--r);padding:14px;">
             <h3 style="color:var(--rose);margin:0 0 8px;">Without DMA (PIO)</h3>
             <ul style="padding-left:16px;">
               <li>CPU manages every byte transfer</li>
@@ -50,7 +61,8 @@
               <li>High interrupt overhead</li>
             </ul>
           </div>
-          <div style="background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);border-radius:var(--r);padding:14px;">
+          <div
+            style="background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);border-radius:var(--r);padding:14px;">
             <h3 style="color:var(--cyan);margin:0 0 8px;">With DMA</h3>
             <ul style="padding-left:16px;">
               <li>DMA controller handles block transfer</li>
@@ -132,7 +144,8 @@
         <div class="main-content">
           <div class="card">
             <div class="mode-tabs">
-              <button class="mode-tab active" id="tab-side-by-side" onclick="setViewMode('sideBySide')">Side-by-Side</button>
+              <button class="mode-tab active" id="tab-side-by-side"
+                onclick="setViewMode('sideBySide')">Side-by-Side</button>
               <button class="mode-tab" id="tab-dma-only" onclick="setViewMode('dmaOnly')">DMA Only</button>
               <button class="mode-tab" id="tab-pio-only" onclick="setViewMode('pioOnly')">PIO Only</button>
             </div>
@@ -155,7 +168,7 @@
                   <div class="arch-sub" id="dma-ctrl-status">Idle</div>
                 </div>
                 <div class="arch-arrow">
-                  <div class="arch-arrow-label">block xfer</div>
+                  <div class="arch-arrow-label">block transfer</div>
                   <div class="arch-arrow-line" id="arrow-dma-mem"></div>
                 </div>
                 <div class="arch-box" id="dma-memory">
@@ -219,7 +232,8 @@
           </div>
 
           <div class="card" id="results-card" style="display:none;">
-            <h2><i class="fas fa-trophy" style="color:var(--orange);margin-right:8px;"></i>Transfer Complete — Results</h2>
+            <h2><i class="fas fa-trophy" style="color:var(--orange);margin-right:8px;"></i>Transfer Complete — Results
+            </h2>
             <div class="stats-grid" id="final-stats"></div>
           </div>
         </div>
@@ -237,38 +251,39 @@
   <script src="dma.js"></script>
 
   <script>
-    (function(){
-      const cvs=document.getElementById('vortex-canvas');
-      if(!cvs)return;
-      const ctx=cvs.getContext('2d');
-      let W=0,H=0,pts=[];
-      const HUES=[{h:240,spread:25},{h:262,spread:22},{h:192,spread:18}];
-      function mH(){return Math.min(W,H)*0.5}
-      class P{
-        constructor(b){
-          const d=HUES[Math.floor(Math.random()*HUES.length)];
-          this.hue=d.h+(Math.random()-0.5)*d.spread;
-          this.sat=70+Math.random()*20;this.lit=55+Math.random()*25;
-          this.angle=Math.random()*Math.PI*2;
-          this.r=b?Math.random()*mH():1;
-          this.va=0.0018+Math.random()*0.004;
-          this.vr=(Math.random()>0.5?1:-1)*(0.25+Math.random()*0.55);
-          this.size=0.4+Math.random()*1.5;this.life=0;
-          this.maxLife=110+Math.random()*210;
+    (function () {
+      const cvs = document.getElementById('vortex-canvas');
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      let W = 0, H = 0, pts = [];
+      const HUES = [{ h: 240, spread: 25 }, { h: 262, spread: 22 }, { h: 192, spread: 18 }];
+      function mH() { return Math.min(W, H) * 0.5 }
+      class P {
+        constructor(b) {
+          const d = HUES[Math.floor(Math.random() * HUES.length)];
+          this.hue = d.h + (Math.random() - 0.5) * d.spread;
+          this.sat = 70 + Math.random() * 20; this.lit = 55 + Math.random() * 25;
+          this.angle = Math.random() * Math.PI * 2;
+          this.r = b ? Math.random() * mH() : 1;
+          this.va = 0.0018 + Math.random() * 0.004;
+          this.vr = (Math.random() > 0.5 ? 1 : -1) * (0.25 + Math.random() * 0.55);
+          this.size = 0.4 + Math.random() * 1.5; this.life = 0;
+          this.maxLife = 110 + Math.random() * 210;
         }
-        step(){this.angle+=this.va;this.r+=this.vr*0.38;this.life+=1;if(this.r<1||this.r>mH()||this.life>this.maxLife)Object.assign(this,new P(false))}
-        paint(){const t=this.life/this.maxLife;const a=t<0.12?t/0.12:t>0.8?(1-t)/0.2:1;const x=W/2+Math.cos(this.angle)*this.r;const y=H/2+Math.sin(this.angle)*this.r;ctx.beginPath();ctx.arc(x,y,this.size,0,Math.PI*2);ctx.fillStyle=`hsla(${this.hue},${this.sat}%,${this.lit}%,${(a*0.65).toFixed(2)})`;ctx.fill()}
+        step() { this.angle += this.va; this.r += this.vr * 0.38; this.life += 1; if (this.r < 1 || this.r > mH() || this.life > this.maxLife) Object.assign(this, new P(false)) }
+        paint() { const t = this.life / this.maxLife; const a = t < 0.12 ? t / 0.12 : t > 0.8 ? (1 - t) / 0.2 : 1; const x = W / 2 + Math.cos(this.angle) * this.r; const y = H / 2 + Math.sin(this.angle) * this.r; ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2); ctx.fillStyle = `hsla(${this.hue},${this.sat}%,${this.lit}%,${(a * 0.65).toFixed(2)})`; ctx.fill() }
       }
-      function resize(){W=cvs.width=window.innerWidth;H=cvs.height=window.innerHeight}
-      function init(){pts=Array.from({length:400},()=>new P(true))}
-      function draw(){ctx.fillStyle='rgba(6,6,8,0.17)';ctx.fillRect(0,0,W,H);const g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,mH()*0.55);g.addColorStop(0,'rgba(99,102,241,0.05)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);pts.forEach(p=>{p.step();p.paint()});requestAnimationFrame(draw)}
-      window.addEventListener('resize',()=>{resize();init()});
-      resize();init();draw();
-      window.addEventListener('scroll',function(){
-        const hdr=document.querySelector('.ps-header');
-        if(hdr)hdr.classList.toggle('scrolled',window.scrollY>60);
-      },{passive:true});
+      function resize() { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight }
+      function init() { pts = Array.from({ length: 400 }, () => new P(true)) }
+      function draw() { ctx.fillStyle = 'rgba(6,6,8,0.17)'; ctx.fillRect(0, 0, W, H); const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, mH() * 0.55); g.addColorStop(0, 'rgba(99,102,241,0.05)'); g.addColorStop(1, 'transparent'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); pts.forEach(p => { p.step(); p.paint() }); requestAnimationFrame(draw) }
+      window.addEventListener('resize', () => { resize(); init() });
+      resize(); init(); draw();
+      window.addEventListener('scroll', function () {
+        const hdr = document.querySelector('.ps-header');
+        if (hdr) hdr.classList.toggle('scrolled', window.scrollY > 60);
+      }, { passive: true });
     }());
   </script>
 </body>
+
 </html>
